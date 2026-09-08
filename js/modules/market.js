@@ -13,6 +13,49 @@ import {
 } from './berries.js';
 
 // =========================================================================
+// NOMBRES EXPLÍCITOS DE BAYAS PARA EVITAR DESFASES DE DICCIONARIO
+// =========================================================================
+export const BERRY_LABELS_ES = {
+    cheri: 'Zreza (Cheri)',
+    pecha: 'Meloc (Pecha)',
+    rawst: 'Safre (Rawst)',
+    chesto: 'Atania (Chesto)',
+    aspear: 'Perasi (Aspear)',
+    leppa: 'Zanama (Leppa)',
+    lum: 'Ziuela (Lum)',
+    sitrus: 'Zidra (Sitrus)',
+    pomeg: 'Grana (Pomeg)',
+    kelpsy: 'Algama (Kelpsy)',
+    qualot: 'Ispero (Qualot)',
+    hondew: 'Meluce (Hondew)',
+    grepa: 'Uva (Grepa)',
+    tamato: 'Tamate (Tamato)'
+};
+
+export const BERRY_LABELS_EN = {
+    cheri: 'Cheri Berry',
+    pecha: 'Pecha Berry',
+    rawst: 'Rawst Berry',
+    chesto: 'Chesto Berry',
+    aspear: 'Aspear Berry',
+    leppa: 'Leppa Berry',
+    lum: 'Lum Berry',
+    sitrus: 'Sitrus Berry',
+    pomeg: 'Pomeg Berry',
+    kelpsy: 'Kelpsy Berry',
+    qualot: 'Qualot Berry',
+    hondew: 'Hondew Berry',
+    grepa: 'Grepa Berry',
+    tamato: 'Tamato Berry'
+};
+
+export function getBerryDisplayName(key) {
+    const isEn = typeof currentLang !== 'undefined' && currentLang === 'en';
+    if (isEn && BERRY_LABELS_EN[key]) return BERRY_LABELS_EN[key];
+    return BERRY_LABELS_ES[key] || (typeof getBerryName === 'function' ? getBerryName(key) : key);
+}
+
+// =========================================================================
 // OPCIONES DE RECETAS DE REPLANTACIÓN (Selección de Semillas por Parcela)
 // =========================================================================
 export const RECIPE_OPTIONS = {
@@ -75,32 +118,71 @@ export const RECIPE_OPTIONS = {
 
 const STORAGE_PREFS_KEY = 'pokemmo_market_unified_prefs';
 
-function getMarketPrefs() {
-    try {
-        const saved = localStorage.getItem(STORAGE_PREFS_KEY);
-        if (saved) return JSON.parse(saved);
-    } catch(e) {}
-    return {
-        berry: 'cheri',
-        plots: 72,
-        yield: 5.5,
-        replantMode: true,
-        recipeId: 'cheri_3plain',
-        berryPrices: { ...DEFAULT_BERRY_PRICES },
-        seedPrices: { ...DEFAULT_SEED_PRICES },
-        toolCost: 350,
-        gtlFee: 5
-    };
+// =========================================================================
+// ESTADO ÚNICO GLOBAL EN MEMORIA (SINGLE SOURCE OF TRUTH)
+// =========================================================================
+let marketState = null;
+
+export function getMarketState() {
+    if (!marketState) {
+        try {
+            const saved = localStorage.getItem(STORAGE_PREFS_KEY);
+            if (saved) {
+                marketState = JSON.parse(saved);
+            }
+        } catch(e) {
+            console.warn('Error reading market state', e);
+        }
+
+        if (!marketState || typeof marketState !== 'object') {
+            marketState = {
+                berry: 'cheri',
+                plots: 72,
+                yield: 5.5,
+                replantMode: true,
+                recipeId: 'cheri_3plain',
+                berryPrices: {},
+                seedPrices: {},
+                toolCost: 350,
+                gtlFee: 5
+            };
+        }
+    }
+
+    // Asegurar diccionarios y fusionar valores por defecto
+    marketState.berryPrices = { ...DEFAULT_BERRY_PRICES, ...(marketState.berryPrices || {}) };
+    marketState.seedPrices = { ...DEFAULT_SEED_PRICES, ...(marketState.seedPrices || {}) };
+    
+    if (!marketState.berry) marketState.berry = 'cheri';
+    if (!marketState.plots) marketState.plots = 72;
+    if (!marketState.yield) marketState.yield = 5.5;
+    if (typeof marketState.toolCost === 'undefined') marketState.toolCost = 350;
+    if (typeof marketState.gtlFee === 'undefined') marketState.gtlFee = 5;
+    if (typeof marketState.replantMode === 'undefined') marketState.replantMode = true;
+
+    // Asegurar que recipeId sea válido para la baya seleccionada
+    const validRecipes = RECIPE_OPTIONS[marketState.berry] || [];
+    if (!validRecipes.some(r => r.id === marketState.recipeId)) {
+        marketState.recipeId = validRecipes[0]?.id || 'none';
+    }
+
+    return marketState;
 }
 
-function saveMarketPrefs(prefs) {
+export function saveMarketState() {
+    if (!marketState) return;
     try {
-        localStorage.setItem(STORAGE_PREFS_KEY, JSON.stringify(prefs));
-    } catch(e) {}
+        localStorage.setItem(STORAGE_PREFS_KEY, JSON.stringify(marketState));
+    } catch(e) {
+        console.warn('Error saving market state', e);
+    }
 }
 
+// =========================================================================
+// RENDERIZADO PRINCIPAL DE LA VISTA
+// =========================================================================
 export function renderMarketView() {
-    const prefs = getMarketPrefs();
+    const state = getMarketState();
     const isEn = typeof currentLang !== 'undefined' && currentLang === 'en';
 
     return `
@@ -147,7 +229,7 @@ export function renderMarketView() {
                     
                     <!-- Switch Replantación -->
                     <label class="flex items-center gap-2 cursor-pointer select-none bg-[#EDE8DC] dark:bg-[#1E1E1A] px-2.5 py-1 rounded-lg border border-[#2B2B2B]/30 dark:border-[#35352E]">
-                        <input type="checkbox" id="marketReplantSwitch" ${prefs.replantMode ? 'checked' : ''} class="w-4 h-4 accent-[#10B981] cursor-pointer">
+                        <input type="checkbox" id="marketReplantSwitch" ${state.replantMode ? 'checked' : ''} class="w-4 h-4 accent-[#10B981] cursor-pointer">
                         <span class="text-xs font-mono font-bold text-[#1C1C17] dark:text-[#F4F1E8]">
                             ${isEn ? 'Reserve Seeds to Replant' : 'Descontar Semillas para Replantar'}
                         </span>
@@ -162,24 +244,24 @@ export function renderMarketView() {
                         </label>
                         <select id="marketBerrySelect" class="w-full p-2.5 text-xs font-mono rounded-lg bg-[#EDE8DC] dark:bg-[#20201C] border border-[#2B2B2B] dark:border-[#35352E] text-[#1C1C17] dark:text-[#F4F1E8] min-h-[42px] cursor-pointer">
                             <optgroup label="${isEn ? 'Basic 16h Status Berries' : 'Básicas (16h - Estados)'}">
-                                <option value="cheri" ${prefs.berry === 'cheri' ? 'selected' : ''}>Zreza (Cheri) - Picante (Spicy)</option>
-                                <option value="pecha" ${prefs.berry === 'pecha' ? 'selected' : ''}>Meloc (Pecha) - Dulce (Sweet)</option>
-                                <option value="rawst" ${prefs.berry === 'rawst' ? 'selected' : ''}>Safre (Rawst) - Amarga (Bitter)</option>
-                                <option value="chesto" ${prefs.berry === 'chesto' ? 'selected' : ''}>Atania (Chesto) - Seca (Dry)</option>
-                                <option value="aspear" ${prefs.berry === 'aspear' ? 'selected' : ''}>Perasi (Aspear) - Ácida (Sour)</option>
+                                <option value="cheri" ${state.berry === 'cheri' ? 'selected' : ''}>Zreza (Cheri) - Picante (Spicy)</option>
+                                <option value="pecha" ${state.berry === 'pecha' ? 'selected' : ''}>Meloc (Pecha) - Dulce (Sweet)</option>
+                                <option value="rawst" ${state.berry === 'rawst' ? 'selected' : ''}>Safre (Rawst) - Amarga (Bitter)</option>
+                                <option value="chesto" ${state.berry === 'chesto' ? 'selected' : ''}>Atania (Chesto) - Seca (Dry)</option>
+                                <option value="aspear" ${state.berry === 'aspear' ? 'selected' : ''}>Perasi (Aspear) - Ácida (Sour)</option>
                             </optgroup>
                             <optgroup label="${isEn ? 'Popular / High Demand' : 'Más Populares / Alta Demanda'}">
-                                <option value="leppa" ${prefs.berry === 'leppa' ? 'selected' : ''}>Zanama (Leppa) - PP / 20h</option>
-                                <option value="lum" ${prefs.berry === 'lum' ? 'selected' : ''}>Ziuela (Lum) - Estados / 44h</option>
-                                <option value="sitrus" ${prefs.berry === 'sitrus' ? 'selected' : ''}>Zidra (Sitrus) - PS / 44h</option>
+                                <option value="leppa" ${state.berry === 'leppa' ? 'selected' : ''}>Zanama (Leppa) - PP / 20h</option>
+                                <option value="lum" ${state.berry === 'lum' ? 'selected' : ''}>Ziuela (Lum) - Estados / 44h</option>
+                                <option value="sitrus" ${state.berry === 'sitrus' ? 'selected' : ''}>Zidra (Sitrus) - PS / 44h</option>
                             </optgroup>
                             <optgroup label="${isEn ? 'EV-Reducing (44h)' : 'Reductoras de EVs (44h)'}">
-                                <option value="pomeg" ${prefs.berry === 'pomeg' ? 'selected' : ''}>Grana (Pomeg) - HP</option>
-                                <option value="kelpsy" ${prefs.berry === 'kelpsy' ? 'selected' : ''}>Algama (Kelpsy) - Ataque</option>
-                                <option value="qualot" ${prefs.berry === 'qualot' ? 'selected' : ''}>Ispero (Qualot) - Defensa</option>
-                                <option value="hondew" ${prefs.berry === 'hondew' ? 'selected' : ''}>Meluce (Hondew) - Atq. Esp.</option>
-                                <option value="grepa" ${prefs.berry === 'grepa' ? 'selected' : ''}>Uva (Grepa) - Def. Esp.</option>
-                                <option value="tamato" ${prefs.berry === 'tamato' ? 'selected' : ''}>Tamate (Tamato) - Velocidad</option>
+                                <option value="pomeg" ${state.berry === 'pomeg' ? 'selected' : ''}>Grana (Pomeg) - HP</option>
+                                <option value="kelpsy" ${state.berry === 'kelpsy' ? 'selected' : ''}>Algama (Kelpsy) - Ataque</option>
+                                <option value="qualot" ${state.berry === 'qualot' ? 'selected' : ''}>Ispero (Qualot) - Defensa</option>
+                                <option value="hondew" ${state.berry === 'hondew' ? 'selected' : ''}>Meluce (Hondew) - Atq. Esp.</option>
+                                <option value="grepa" ${state.berry === 'grepa' ? 'selected' : ''}>Uva (Grepa) - Def. Esp.</option>
+                                <option value="tamato" ${state.berry === 'tamato' ? 'selected' : ''}>Tamate (Tamato) - Velocidad</option>
                             </optgroup>
                         </select>
                     </div>
@@ -202,7 +284,7 @@ export function renderMarketView() {
                                 </button>
                             </div>
                         </div>
-                        <input type="number" id="marketPlotsInput" value="${prefs.plots || 72}" min="1" max="2000" class="w-full p-2.5 text-sm font-mono font-bold text-center rounded-lg bg-[#EDE8DC] dark:bg-[#20201C] border border-[#2B2B2B] dark:border-[#35352E] text-[#1C1C17] dark:text-[#F4F1E8] min-h-[42px]">
+                        <input type="number" id="marketPlotsInput" value="${state.plots || 72}" min="1" max="2000" class="w-full p-2.5 text-sm font-mono font-bold text-center rounded-lg bg-[#EDE8DC] dark:bg-[#20201C] border border-[#2B2B2B] dark:border-[#35352E] text-[#1C1C17] dark:text-[#F4F1E8] min-h-[42px]">
                     </div>
 
                     <!-- Rendimiento por Parcela -->
@@ -211,11 +293,11 @@ export function renderMarketView() {
                             ${isEn ? 'Expected Yield (Berries/Plot)' : 'Rendimiento (Bayas/Parcela)'}
                         </label>
                         <select id="marketYieldSelect" class="w-full p-2.5 text-xs font-mono rounded-lg bg-[#EDE8DC] dark:bg-[#20201C] border border-[#2B2B2B] dark:border-[#35352E] text-[#1C1C17] dark:text-[#F4F1E8] min-h-[42px] cursor-pointer">
-                            <option value="4.0">4.0 bayas (${isEn ? 'Minimum' : 'Mínimo sin regar'})</option>
-                            <option value="5.0">5.0 bayas (${isEn ? '1 watering' : 'Riego básico'})</option>
-                            <option value="5.5" ${prefs.yield == 5.5 ? 'selected' : ''}>5.5 bayas (${isEn ? 'Normal hydrated' : 'Promedio normal'})</option>
-                            <option value="6.0" ${prefs.yield == 6.0 ? 'selected' : ''}>6.0 bayas (${isEn ? 'Optimal' : 'Riego constante óptimo'})</option>
-                            <option value="7.0">7.0 bayas (${isEn ? 'Perfect maximum' : 'Máximo perfecto'})</option>
+                            <option value="4.0" ${state.yield == 4.0 ? 'selected' : ''}>4.0 bayas (${isEn ? 'Minimum' : 'Mínimo sin regar'})</option>
+                            <option value="5.0" ${state.yield == 5.0 ? 'selected' : ''}>5.0 bayas (${isEn ? '1 watering' : 'Riego básico'})</option>
+                            <option value="5.5" ${state.yield == 5.5 ? 'selected' : ''}>5.5 bayas (${isEn ? 'Normal hydrated' : 'Promedio normal'})</option>
+                            <option value="6.0" ${state.yield == 6.0 ? 'selected' : ''}>6.0 bayas (${isEn ? 'Optimal' : 'Riego constante óptimo'})</option>
+                            <option value="7.0" ${state.yield == 7.0 ? 'selected' : ''}>7.0 bayas (${isEn ? 'Perfect maximum' : 'Máximo perfecto'})</option>
                         </select>
                     </div>
 
@@ -238,7 +320,7 @@ export function renderMarketView() {
                         </span>
                         <div class="flex items-center gap-1 font-mono font-bold text-xs">
                             <span>$</span>
-                            <input type="number" id="marketToolCost" value="${prefs.toolCost || 350}" min="0" step="10" class="w-20 p-1 text-right rounded bg-[#EDE8DC] dark:bg-[#2E2E27] border border-[#2B2B2B] dark:border-[#35352E] text-[#1C1C17] dark:text-[#F4F1E8]">
+                            <input type="number" id="marketToolCost" value="${state.toolCost || 350}" min="0" step="10" class="w-20 p-1 text-right rounded bg-[#EDE8DC] dark:bg-[#2E2E27] border border-[#2B2B2B] dark:border-[#35352E] text-[#1C1C17] dark:text-[#F4F1E8]">
                         </div>
                     </div>
                     <div class="flex items-center justify-between bg-[#EDE8DC]/50 dark:bg-[#1E1E1A] p-2.5 rounded-lg border border-[#2B2B2B]/20 dark:border-[#35352E]">
@@ -246,7 +328,7 @@ export function renderMarketView() {
                             ${isEn ? 'GTL Sales Commission' : 'Comisión de Venta en el GTL'}:
                         </span>
                         <div class="flex items-center gap-1 font-mono font-bold text-xs">
-                            <input type="number" id="marketGtlFee" value="${prefs.gtlFee || 5}" min="0" max="20" step="1" class="w-16 p-1 text-right rounded bg-[#EDE8DC] dark:bg-[#2E2E27] border border-[#2B2B2B] dark:border-[#35352E] text-[#1C1C17] dark:text-[#F4F1E8]">
+                            <input type="number" id="marketGtlFee" value="${state.gtlFee || 5}" min="0" max="20" step="1" class="w-16 p-1 text-right rounded bg-[#EDE8DC] dark:bg-[#2E2E27] border border-[#2B2B2B] dark:border-[#35352E] text-[#1C1C17] dark:text-[#F4F1E8]">
                             <span>%</span>
                         </div>
                     </div>
@@ -268,7 +350,7 @@ export function renderMarketView() {
                 </div>
             </section>
 
-            <!-- Panel 3: Desglose de Trituración y Replantación ("¿Cuántas semillas me dan?") -->
+            <!-- Panel 3: Desglose de Trituración y Replantación -->
             <section class="panel p-5 rounded-xl border-2 border-[#2B2B2B] dark:border-[#35352E] bg-[#FAF8F2] dark:bg-[#242420] shadow-[2px_3px_0px_#2B2B2B] dark:shadow-[2px_3px_0px_#000]">
                 <div class="flex flex-wrap items-center justify-between pb-3 mb-4 border-b border-[#2B2B2B]/20 dark:border-[#35352E] gap-2">
                     <h2 class="text-xs font-tech font-bold uppercase tracking-wider text-[#1C1C17] dark:text-[#F4F1E8] flex items-center gap-2">
@@ -299,7 +381,7 @@ export function renderMarketView() {
                 </div>
             </section>
 
-            <!-- Panel 4: Comparador de Rentabilidad & Veredicto Destacado ("¿Cuál sale más a cuenta?") -->
+            <!-- Panel 4: Comparador de Rentabilidad & Veredicto Destacado -->
             <section class="space-y-4">
                 <!-- Veredicto Visual Gigante -->
                 <div id="marketVerdictBanner" class="p-5 sm:p-6 rounded-2xl border-3 shadow-lg transition-all">
@@ -394,24 +476,36 @@ export function renderMarketView() {
 }
 
 // =========================================================================
-// LÓGICA DE CONTROL Y CÁLCULOS EN TIEMPO REAL
+// INICIALIZACIÓN Y EVENT LISTENERS REACTIVOS
 // =========================================================================
 export function initMarket() {
-    const prefs = getMarketPrefs();
+    const state = getMarketState();
 
-    // Actualizar dropdown de recetas para la baya inicial
-    populateRecipeSelect(prefs.berry, prefs.recipeId);
-    renderPriceCards(prefs.berry);
+    // Sincronizar dropdowns iniciales
+    const berrySelect = document.getElementById('marketBerrySelect');
+    if (berrySelect) {
+        berrySelect.value = state.berry;
+    }
+
+    populateRecipeSelect(state.berry, state.recipeId);
+    renderPriceCards(state.berry);
 
     // Eventos
-    const berrySelect = document.getElementById('marketBerrySelect');
     if (berrySelect) {
         berrySelect.addEventListener('change', (e) => {
             const newBerry = e.target.value;
-            prefs.berry = newBerry;
-            populateRecipeSelect(newBerry);
+            state.berry = newBerry;
+
+            // Al cambiar de baya, actualizar receta por defecto
+            const recipeOpts = RECIPE_OPTIONS[newBerry] || [];
+            const hasValidRecipe = recipeOpts.some(r => r.id === state.recipeId);
+            if (!hasValidRecipe && recipeOpts.length > 0) {
+                state.recipeId = recipeOpts[0].id;
+            }
+
+            saveMarketState();
+            populateRecipeSelect(newBerry, state.recipeId);
             renderPriceCards(newBerry);
-            saveMarketPrefs(prefs);
             updateSimulation();
         });
     }
@@ -419,8 +513,8 @@ export function initMarket() {
     const recipeSelect = document.getElementById('marketRecipeSelect');
     if (recipeSelect) {
         recipeSelect.addEventListener('change', (e) => {
-            prefs.recipeId = e.target.value;
-            saveMarketPrefs(prefs);
+            state.recipeId = e.target.value;
+            saveMarketState();
             updateSimulation();
         });
     }
@@ -428,8 +522,8 @@ export function initMarket() {
     const plotsInput = document.getElementById('marketPlotsInput');
     if (plotsInput) {
         plotsInput.addEventListener('input', (e) => {
-            prefs.plots = parseInt(e.target.value) || 0;
-            saveMarketPrefs(prefs);
+            state.plots = parseInt(e.target.value) || 0;
+            saveMarketState();
             updateSimulation();
         });
     }
@@ -437,8 +531,8 @@ export function initMarket() {
     const yieldSelect = document.getElementById('marketYieldSelect');
     if (yieldSelect) {
         yieldSelect.addEventListener('change', (e) => {
-            prefs.yield = parseFloat(e.target.value) || 5.5;
-            saveMarketPrefs(prefs);
+            state.yield = parseFloat(e.target.value) || 5.5;
+            saveMarketState();
             updateSimulation();
         });
     }
@@ -446,8 +540,8 @@ export function initMarket() {
     const replantSwitch = document.getElementById('marketReplantSwitch');
     if (replantSwitch) {
         replantSwitch.addEventListener('change', (e) => {
-            prefs.replantMode = e.target.checked;
-            saveMarketPrefs(prefs);
+            state.replantMode = e.target.checked;
+            saveMarketState();
             updateSimulation();
         });
     }
@@ -455,8 +549,8 @@ export function initMarket() {
     const toolCostInput = document.getElementById('marketToolCost');
     if (toolCostInput) {
         toolCostInput.addEventListener('input', (e) => {
-            prefs.toolCost = parseFloat(e.target.value) || 350;
-            saveMarketPrefs(prefs);
+            state.toolCost = parseFloat(e.target.value) || 350;
+            saveMarketState();
             updateSimulation();
         });
     }
@@ -464,8 +558,8 @@ export function initMarket() {
     const feeInput = document.getElementById('marketGtlFee');
     if (feeInput) {
         feeInput.addEventListener('input', (e) => {
-            prefs.gtlFee = parseFloat(e.target.value) || 5;
-            saveMarketPrefs(prefs);
+            state.gtlFee = parseFloat(e.target.value) || 5;
+            saveMarketState();
             updateSimulation();
         });
     }
@@ -476,7 +570,7 @@ export function initMarket() {
             saveCurrentInputsToMemory();
             const msg = document.getElementById('gtlPriceStatusMsg');
             if (msg) {
-                msg.innerText = typeof currentLang !== 'undefined' && currentLang === 'en' ? 'Prices saved to memory!' : '¡Precios guardados en memoria!';
+                msg.innerText = typeof currentLang !== 'undefined' && currentLang === 'en' ? 'Prices saved!' : '¡Precios guardados!';
                 setTimeout(() => { if (msg) msg.innerText = ''; }, 3000);
             }
         });
@@ -485,32 +579,22 @@ export function initMarket() {
     const btnReset = document.getElementById('btnResetGTL');
     if (btnReset) {
         btnReset.addEventListener('click', () => {
-            prefs.berryPrices = { ...DEFAULT_BERRY_PRICES };
-            prefs.seedPrices = { ...DEFAULT_SEED_PRICES };
-            prefs.toolCost = 350;
-            prefs.gtlFee = 5;
-            saveMarketPrefs(prefs);
-            renderPriceCards(prefs.berry);
-            if (toolCostInput) toolCostInput.value = 350;
-            if (feeInput) feeInput.value = 5;
-            updateSimulation();
+            resetMarketPrices();
         });
     }
 
     window.setMarketPlots = (num) => {
         const pInput = document.getElementById('marketPlotsInput');
-        if (pInput) {
-            pInput.value = num;
-            prefs.plots = num;
-            saveMarketPrefs(prefs);
-            updateSimulation();
-        }
+        if (pInput) pInput.value = num;
+        state.plots = num;
+        saveMarketState();
+        updateSimulation();
     };
 
     updateSimulation();
 }
 
-function populateRecipeSelect(berryKey, selectedId = null) {
+export function populateRecipeSelect(berryKey, selectedId = null) {
     const recipeSelect = document.getElementById('marketRecipeSelect');
     if (!recipeSelect) return;
 
@@ -529,23 +613,23 @@ function populateRecipeSelect(berryKey, selectedId = null) {
     }).join('');
 }
 
-function renderPriceCards(berryKey) {
+export function renderPriceCards(berryKey) {
     const container = document.getElementById('marketPricesContainer');
     if (!container) return;
 
-    const prefs = getMarketPrefs();
+    const state = getMarketState();
     const isEn = typeof currentLang !== 'undefined' && currentLang === 'en';
     const profile = EXTRACTION_PROFILES[berryKey] || {};
     const recipeOpts = RECIPE_OPTIONS[berryKey] || [];
     
-    // Obtener todas las semillas relevantes (las que produce al triturar + las que pide cualquier receta)
+    // Todas las semillas asociadas (drops de extracción + ingredientes de recetas de esta baya)
     const seedIds = new Set(Object.keys(profile));
     recipeOpts.forEach(rec => {
         rec.reqs.forEach(rq => seedIds.add(rq.id));
     });
 
-    const berryPrice = prefs.berryPrices?.[berryKey] ?? DEFAULT_BERRY_PRICES[berryKey] ?? 1000;
-    const berryName = getBerryName(berryKey);
+    const berryPrice = state.berryPrices[berryKey] ?? DEFAULT_BERRY_PRICES[berryKey] ?? 1000;
+    const berryName = getBerryDisplayName(berryKey);
 
     let html = `
         <!-- Tarjeta Precio Baya -->
@@ -566,7 +650,7 @@ function renderPriceCards(berryKey) {
 
     // Tarjetas para cada semilla asociada
     seedIds.forEach(seedId => {
-        const seedPrice = prefs.seedPrices?.[seedId] ?? DEFAULT_SEED_PRICES[seedId] ?? 750;
+        const seedPrice = state.seedPrices[seedId] ?? DEFAULT_SEED_PRICES[seedId] ?? 750;
         const seedName = getSeedName(seedId);
         const colorClass = SEED_COLORS[seedId] || 'text-[#1C1C17] dark:text-[#F4F1E8]';
 
@@ -589,14 +673,13 @@ function renderPriceCards(berryKey) {
 
     container.innerHTML = html;
 
-    // Vincular inputs a la simulación inmediata
+    // Vincular inputs reactivamente
     const bInput = document.getElementById('priceBerryInput');
     if (bInput) {
         bInput.addEventListener('input', (e) => {
-            const p = parseInt(e.target.value) || 0;
-            prefs.berryPrices = prefs.berryPrices || {};
-            prefs.berryPrices[berryKey] = p;
-            saveMarketPrefs(prefs);
+            const val = parseInt(e.target.value) || 0;
+            state.berryPrices[berryKey] = val;
+            saveMarketState();
             updateSimulation();
         });
     }
@@ -604,46 +687,77 @@ function renderPriceCards(berryKey) {
     container.querySelectorAll('.seed-price-input').forEach(inp => {
         inp.addEventListener('input', (e) => {
             const sId = e.target.getAttribute('data-seedid');
-            const p = parseInt(e.target.value) || 0;
-            prefs.seedPrices = prefs.seedPrices || {};
-            prefs.seedPrices[sId] = p;
-            saveMarketPrefs(prefs);
+            const val = parseInt(e.target.value) || 0;
+            state.seedPrices[sId] = val;
+            saveMarketState();
             updateSimulation();
         });
     });
 }
 
-function saveCurrentInputsToMemory() {
-    const prefs = getMarketPrefs();
+export function saveCurrentInputsToMemory() {
+    const state = getMarketState();
     const bInput = document.getElementById('priceBerryInput');
-    if (bInput && prefs.berry) {
-        prefs.berryPrices = prefs.berryPrices || {};
-        prefs.berryPrices[prefs.berry] = parseInt(bInput.value) || DEFAULT_BERRY_PRICES[prefs.berry];
+    if (bInput && state.berry) {
+        state.berryPrices[state.berry] = parseInt(bInput.value) || DEFAULT_BERRY_PRICES[state.berry] || 1000;
     }
     document.querySelectorAll('.seed-price-input').forEach(inp => {
         const sId = inp.getAttribute('data-seedid');
-        prefs.seedPrices = prefs.seedPrices || {};
-        prefs.seedPrices[sId] = parseInt(inp.value) || DEFAULT_SEED_PRICES[sId];
+        if (sId) {
+            state.seedPrices[sId] = parseInt(inp.value) || DEFAULT_SEED_PRICES[sId] || 750;
+        }
     });
-    saveMarketPrefs(prefs);
+    saveMarketState();
 }
 
-function updateSimulation() {
-    const prefs = getMarketPrefs();
+export function resetMarketPrices() {
+    const state = getMarketState();
+    state.berryPrices = { ...DEFAULT_BERRY_PRICES };
+    state.seedPrices = { ...DEFAULT_SEED_PRICES };
+    state.toolCost = 350;
+    state.gtlFee = 5;
+    saveMarketState();
+
+    const toolCostInput = document.getElementById('marketToolCost');
+    if (toolCostInput) toolCostInput.value = 350;
+
+    const feeInput = document.getElementById('marketGtlFee');
+    if (feeInput) feeInput.value = 5;
+
+    renderPriceCards(state.berry);
+    updateSimulation();
+}
+
+// =========================================================================
+// MOTOR DE SIMULACIÓN Y CÁLCULO FINANCIERO
+// =========================================================================
+export function updateSimulation() {
+    const state = getMarketState();
     const isEn = typeof currentLang !== 'undefined' && currentLang === 'en';
 
-    const berryKey = prefs.berry || 'cheri';
-    const plots = Math.max(1, prefs.plots || 72);
-    const yieldVal = prefs.yield || 5.5;
-    const replantMode = prefs.replantMode !== false;
-    const toolCost = prefs.toolCost || 350;
-    const feePct = prefs.gtlFee || 5;
+    // Sincronizar con el valor visual del selector de bayas si existe en DOM
+    const berrySelect = document.getElementById('marketBerrySelect');
+    if (berrySelect && berrySelect.value) {
+        state.berry = berrySelect.value;
+    }
+
+    const recipeSelect = document.getElementById('marketRecipeSelect');
+    if (recipeSelect && recipeSelect.value && recipeSelect.value !== 'none') {
+        state.recipeId = recipeSelect.value;
+    }
+
+    const berryKey = state.berry || 'cheri';
+    const plots = Math.max(1, state.plots || 72);
+    const yieldVal = state.yield || 5.5;
+    const replantMode = state.replantMode !== false;
+    const toolCost = typeof state.toolCost !== 'undefined' ? state.toolCost : 350;
+    const feePct = typeof state.gtlFee !== 'undefined' ? state.gtlFee : 5;
     const feeFactor = (100 - feePct) / 100;
 
     const totalBerries = Math.round(plots * yieldVal);
     const profile = EXTRACTION_PROFILES[berryKey] || {};
     const recipeOpts = RECIPE_OPTIONS[berryKey] || [];
-    const chosenRecipe = recipeOpts.find(r => r.id === prefs.recipeId) || recipeOpts[0];
+    const chosenRecipe = recipeOpts.find(r => r.id === state.recipeId) || recipeOpts[0];
 
     // Semillas requeridas para replantar
     const replantNeeds = {};
@@ -683,7 +797,7 @@ function updateSimulation() {
     relevantSeedIds.forEach(seedId => {
         const produced = crushedSeeds[seedId] || 0;
         const needed = replantNeeds[seedId] || 0;
-        const seedPrice = prefs.seedPrices?.[seedId] ?? DEFAULT_SEED_PRICES[seedId] ?? 750;
+        const seedPrice = state.seedPrices[seedId] ?? DEFAULT_SEED_PRICES[seedId] ?? 750;
         const seedName = getSeedName(seedId);
         const colorClass = SEED_COLORS[seedId] || '';
         const dropRatePct = ((profile[seedId] || 0) * 100).toFixed(0);
@@ -736,7 +850,7 @@ function updateSimulation() {
     // =========================================================================
     // CÁLCULO DE RESULTADOS FINALES Y COMPARATIVA
     // =========================================================================
-    const berryPrice = prefs.berryPrices?.[berryKey] ?? DEFAULT_BERRY_PRICES[berryKey] ?? 1000;
+    const berryPrice = state.berryPrices[berryKey] ?? DEFAULT_BERRY_PRICES[berryKey] ?? 1000;
 
     // Opción A: Venta Cruda
     const rawGross = totalBerries * berryPrice;
@@ -750,7 +864,7 @@ function updateSimulation() {
     const surplusNetGtl = surplusGrossVal - surplusFee;
     const crushFinalProfit = surplusNetGtl - toolsExpense - deficitCost;
 
-    // Actualizar Tarjeta Opción A
+    // Actualizar Textos Opción A
     const rawGrossEl = document.getElementById('rawGrossText');
     const rawFeePctEl = document.getElementById('rawFeePctText');
     const rawFeeEl = document.getElementById('rawFeeText');
@@ -759,18 +873,18 @@ function updateSimulation() {
     const rawReplantRow = document.getElementById('rawReplantRow');
     const rawFinalProfitEl = document.getElementById('rawFinalProfitText');
 
-    if (rawGrossEl) rawGrossEl.innerText = formatMoney(rawGross);
+    if (rawGrossEl) rawGrossEl.innerText = formatMoney(Math.round(rawGross));
     if (rawFeePctEl) rawFeePctEl.innerText = feePct;
     if (rawFeeEl) rawFeeEl.innerText = `-${formatMoney(Math.round(rawFee))}`;
     if (rawNetGtlEl) rawNetGtlEl.innerText = formatMoney(Math.round(rawNetGtl));
     if (rawReplantCostEl) rawReplantCostEl.innerText = `-${formatMoney(Math.round(replantBuyCost))}`;
     if (rawReplantRow) {
-        if (!replantMode) rawReplantRow.classList.add('hidden');
-        else rawReplantRow.classList.remove('hidden');
+        if (replantMode && replantBuyCost > 0) rawReplantRow.classList.remove('hidden');
+        else rawReplantRow.classList.add('hidden');
     }
     if (rawFinalProfitEl) rawFinalProfitEl.innerText = formatMoney(Math.round(rawFinalProfit));
 
-    // Actualizar Tarjeta Opción B
+    // Actualizar Textos Opción B
     const crushGrossEl = document.getElementById('crushGrossText');
     const crushFeePctEl = document.getElementById('crushFeePctText');
     const crushFeeEl = document.getElementById('crushFeeText');

@@ -5,6 +5,9 @@ import { t, currentLang } from '../i18n.js';
 // We're importing DOM functions if they existed, but we'll manipulate directly for now
 
 export function getBerryName(type) {
+    if (typeof RECIPES !== 'undefined' && RECIPES[type]) {
+        return getRecipeName(type);
+    }
     const dbInfo = BERRY_DB[type] || BERRY_DB.zanama;
     if (typeof currentLang !== 'undefined' && currentLang === 'en') {
         const names = {
