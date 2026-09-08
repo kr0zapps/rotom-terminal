@@ -79,7 +79,7 @@ export const DICT = {
         // Navigation tabs
         tab_gyms: 'GYM RERUNS',
         tab_berries: 'BERRY FARMING',
-        tab_market: 'GTL CALCULATOR',
+        tab_market: 'GTL MARKET',
         tab_extraction: 'SEED CRUSHER',
         tab_pokedex: 'POKÉDEX RADAR',
         tab_breeding: 'BREEDING LAB',
@@ -383,7 +383,7 @@ export const DICT = {
         // Navigation tabs
         tab_gyms: 'GIMNASIOS',
         tab_berries: 'CULTIVO DE BAYAS',
-        tab_market: 'CALCULADORA GTL',
+        tab_market: 'MERCADO GTL',
         tab_extraction: 'EXTRACCIÓN',
         tab_pokedex: 'POKÉDEX',
         tab_breeding: 'CRIANZA E IVS',
@@ -730,7 +730,6 @@ export function updateNavTabsText() {
             if (val === 'gyms') options[i].textContent = t('tab_gyms');
             if (val === 'berries') options[i].textContent = t('tab_berries');
             if (val === 'market') options[i].textContent = t('tab_market');
-            if (val === 'extraction') options[i].textContent = t('tab_extraction');
             if (val === 'pokedex') options[i].textContent = t('tab_pokedex');
             if (val === 'breeding') options[i].textContent = t('tab_breeding');
         }
@@ -746,8 +745,6 @@ export function updateNavTabsText() {
     const tabMarket = document.querySelector('#nav-market span');
     if (tabMarket) tabMarket.textContent = t('tab_market');
 
-    const tabExtraction = document.querySelector('#nav-extraction span');
-    if (tabExtraction) tabExtraction.textContent = t('tab_extraction');
 
     const tabPokedex = document.querySelector('#nav-pokedex span');
     if (tabPokedex) tabPokedex.textContent = t('tab_pokedex');

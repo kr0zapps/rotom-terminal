@@ -8,7 +8,6 @@ import { switchTab, initRouter } from './router.js';
 import * as gyms from './modules/gyms.js';
 import * as berries from './modules/berries.js';
 import * as market from './modules/market.js';
-import * as extraction from './modules/extraction.js';
 import * as pokedex from './modules/pokedex.js';
 import { getPokeMMOClock } from './utils/pokemmo-time.js';
 import { currentLang, toggleLanguage, setLanguage, t, updateI18nDOM } from './i18n.js';
@@ -25,7 +24,7 @@ window.showAuthModal = () => {
     isAppInitializing = false;
     renderAuthUI(initApp);
 };
-Object.assign(window, gyms, berries, market, extraction, pokedex);
+Object.assign(window, gyms, berries, market, pokedex);
 
 let isAppInitialized = false;
 let isAppInitializing = false;
@@ -41,7 +40,6 @@ export function reRenderAllViews() {
     if (gyms.renderGymView) viewsHtml += `<div id="view-gyms" class="block animate-fade-in">${gyms.renderGymView()}</div>`;
     if (berries.renderBerryView) viewsHtml += berries.renderBerryView();
     if (market.renderMarketView) viewsHtml += market.renderMarketView();
-    if (extraction.renderExtractionView) viewsHtml += extraction.renderExtractionView();
     if (pokedex.renderPokédexView) viewsHtml += pokedex.renderPokédexView();
 
     if (breedingModule && breedingModule.renderBreedingView) {
@@ -62,7 +60,6 @@ export function reRenderAllViews() {
     if (gyms.initGyms) gyms.initGyms();
     if (berries.initBerries) berries.initBerries();
     if (market.initMarket) market.initMarket();
-    if (extraction.initExtraction) extraction.initExtraction();
     if (pokedex.initPokédex) pokedex.initPokédex();
     if (breedingModule && breedingModule.initBreeding) breedingModule.initBreeding();
 
@@ -89,7 +86,6 @@ async function initApp() {
         if (gyms.renderGymView) viewsHtml += `<div id="view-gyms" class="block animate-fade-in">${gyms.renderGymView()}</div>`;
         if (berries.renderBerryView) viewsHtml += berries.renderBerryView();
         if (market.renderMarketView) viewsHtml += market.renderMarketView();
-        if (extraction.renderExtractionView) viewsHtml += extraction.renderExtractionView();
         if (pokedex.renderPokédexView) viewsHtml += pokedex.renderPokédexView();
         
         // Carga dinámica del módulo de crianza
@@ -123,7 +119,6 @@ async function initApp() {
         if (gyms.initGyms) gyms.initGyms();
         if (berries.initBerries) berries.initBerries();
         if (market.initMarket) market.initMarket();
-        if (extraction.initExtraction) extraction.initExtraction();
         if (pokedex.initPokédex) pokedex.initPokédex();
         if (breedingModule && breedingModule.initBreeding) breedingModule.initBreeding();
 

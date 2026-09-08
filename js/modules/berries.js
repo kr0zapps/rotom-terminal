@@ -158,11 +158,11 @@ export const RECIPES = {
         { id: 'picante', qty: 1, name: 'Semilla Picante', color: 'bg-red-400' },
         { id: 'seca', qty: 1, name: 'Semilla Seca', color: 'bg-blue-400' }
     ]},
-    pecha: { name: 'Meloc (Pecha)', reqs: [{ id: 'dulce', qty: 1, name: 'Semilla Dulce', color: 'bg-pink-400' }]},
-    cheri: { name: 'Zreza (Cheri)', reqs: [{ id: 'picante', qty: 1, name: 'Semilla Picante', color: 'bg-red-400' }]},
-    chesto: { name: 'Atania (Chesto)', reqs: [{ id: 'seca', qty: 1, name: 'Semilla Seca', color: 'bg-blue-400' }]},
-    rawst: { name: 'Safre (Rawst)', reqs: [{ id: 'amarga', qty: 1, name: 'Semilla Amarga', color: 'bg-green-500' }]},
-    aspear: { name: 'Perasi (Aspear)', reqs: [{ id: 'acida', qty: 1, name: 'Semilla Ácida', color: 'bg-yellow-400' }]}
+    pecha: { name: 'Meloc (Pecha)', reqs: [{ id: 'dulce', qty: 3, name: 'Semilla Dulce', color: 'bg-pink-400' }]},
+    cheri: { name: 'Zreza (Cheri)', reqs: [{ id: 'picante', qty: 3, name: 'Semilla Picante', color: 'bg-red-400' }]},
+    chesto: { name: 'Atania (Chesto)', reqs: [{ id: 'seca', qty: 3, name: 'Semilla Seca', color: 'bg-blue-400' }]},
+    rawst: { name: 'Safre (Rawst)', reqs: [{ id: 'amarga', qty: 3, name: 'Semilla Amarga', color: 'bg-green-500' }]},
+    aspear: { name: 'Perasi (Aspear)', reqs: [{ id: 'acida', qty: 3, name: 'Semilla Ácida', color: 'bg-yellow-400' }]}
 };
 
 export const SEED_NAMES_EN = {
