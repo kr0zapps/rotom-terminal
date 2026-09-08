@@ -49,6 +49,13 @@ export const BERRY_LABELS_EN = {
     tamato: 'Tamato Berry'
 };
 
+export const BERRY_GROWTH_HOURS = {
+    cheri: 16, pecha: 16, rawst: 16, chesto: 16, aspear: 16,
+    leppa: 20,
+    lum: 44, sitrus: 44,
+    pomeg: 44, kelpsy: 44, qualot: 44, hondew: 44, grepa: 44, tamato: 44
+};
+
 export function getBerryDisplayName(key) {
     const isEn = typeof currentLang !== 'undefined' && currentLang === 'en';
     if (isEn && BERRY_LABELS_EN[key]) return BERRY_LABELS_EN[key];
@@ -122,6 +129,7 @@ const STORAGE_PREFS_KEY = 'pokemmo_market_unified_prefs';
 // ESTADO ÚNICO GLOBAL EN MEMORIA (SINGLE SOURCE OF TRUTH)
 // =========================================================================
 let marketState = null;
+let currentRankingSort = 'hourly'; // 'hourly' | 'total'
 
 export function getMarketState() {
     if (!marketState) {
@@ -149,7 +157,7 @@ export function getMarketState() {
         }
     }
 
-    // Asegurar diccionarios y fusionar valores por defecto
+    // Asegurar diccionarios y fusionar valores por defecto reales
     marketState.berryPrices = { ...DEFAULT_BERRY_PRICES, ...(marketState.berryPrices || {}) };
     marketState.seedPrices = { ...DEFAULT_SEED_PRICES, ...(marketState.seedPrices || {}) };
     
@@ -203,7 +211,7 @@ export function renderMarketView() {
                             </span>
                         </div>
                         <p class="text-xs font-sans text-[#5F5A4D] dark:text-[#A8A594] mt-0.5">
-                            ${isEn ? 'Compare selling raw berries vs. crushing into seeds, reserve replanting seeds per plot, and discover the most profitable path.' : 'Compara vender bayas crudas vs. triturar, descuenta las semillas para replantar y descubre qué opción te da más dinero neto en el GTL.'}
+                            ${isEn ? 'Compare selling raw berries vs. crushing into seeds, analyze global berry profitability, and find the most lucrative crops.' : 'Compara vender bayas crudas vs. triturar, analiza el ranking global de rentabilidad de todas las bayas y descubre cuál te da más dinero neto.'}
                         </p>
                     </div>
                 </div>
@@ -219,8 +227,60 @@ export function renderMarketView() {
                 </div>
             </div>
 
-            <!-- Panel 1: Parámetros del Cultivo & Receta de Replantación -->
+            <!-- Panel 0: RANKING GLOBAL DE RENTABILIDAD (TODAS LAS BAYAS) -->
             <section class="panel p-5 rounded-xl border-2 border-[#2B2B2B] dark:border-[#35352E] bg-[#FAF8F2] dark:bg-[#242420] shadow-[2px_3px_0px_#2B2B2B] dark:shadow-[2px_3px_0px_#000]">
+                <div class="flex flex-wrap items-center justify-between pb-3 mb-4 border-b border-[#2B2B2B]/20 dark:border-[#35352E] gap-3">
+                    <div>
+                        <h2 class="text-sm font-tech font-bold uppercase tracking-wider text-[#1C1C17] dark:text-[#F4F1E8] flex items-center gap-2">
+                            <span class="w-3 h-3 rounded-full bg-[#EAB308]"></span>
+                            <span>${isEn ? 'Global Berry Profitability Ranking' : 'Ranking Global de Rentabilidad de Bayas'}</span>
+                        </h2>
+                        <p class="text-[11px] font-sans text-[#5F5A4D] dark:text-[#A8A594] mt-0.5">
+                            ${isEn ? 'Simultaneous audit of all 14 crops based on live GTL prices and replanting recipes.' : 'Evaluación simultánea de las 14 especies con los precios actuales del GTL y descuento de replanteo.'}
+                        </p>
+                    </div>
+
+                    <!-- Botones de ordenamiento -->
+                    <div class="flex items-center gap-1.5 bg-[#EDE8DC] dark:bg-[#1E1E1A] p-1 rounded-lg border border-[#2B2B2B]/30 dark:border-[#35352E]">
+                        <button type="button" id="btnSortHourly" onclick="window.toggleRankingSort('hourly')" 
+                            class="px-2.5 py-1 rounded text-xs font-tech font-bold uppercase transition cursor-pointer ${currentRankingSort === 'hourly' ? 'bg-[#10B981] text-white shadow-sm' : 'text-[#5F5A4D] dark:text-[#A8A594] hover:text-[#1C1C17] dark:hover:text-[#F4F1E8]'}">
+                            ${isEn ? 'Sort by $/Hour' : 'Por $/Hora'}
+                        </button>
+                        <button type="button" id="btnSortTotal" onclick="window.toggleRankingSort('total')" 
+                            class="px-2.5 py-1 rounded text-xs font-tech font-bold uppercase transition cursor-pointer ${currentRankingSort === 'total' ? 'bg-[#10B981] text-white shadow-sm' : 'text-[#5F5A4D] dark:text-[#A8A594] hover:text-[#1C1C17] dark:hover:text-[#F4F1E8]'}">
+                            ${isEn ? 'Sort by Total $' : 'Por Ganancia Lote'}
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Podio TOP 3 -->
+                <div id="rankingPodiumContainer" class="grid grid-cols-1 md:grid-cols-3 gap-3 mb-5">
+                    <!-- Inyectado dinámicamente -->
+                </div>
+
+                <!-- Tabla Completa de las 14 Bayas -->
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-xs font-mono border-collapse">
+                        <thead>
+                            <tr class="bg-[#EDE8DC] dark:bg-[#1E1E1A] text-[#5F5A4D] dark:text-[#A8A594] border-b-2 border-[#2B2B2B] dark:border-[#35352E]">
+                                <th class="p-2.5 font-bold uppercase tracking-wider text-center w-12">#</th>
+                                <th class="p-2.5 font-bold uppercase tracking-wider">${isEn ? 'Berry & Cycle' : 'Baya y Ciclo'}</th>
+                                <th class="p-2.5 font-bold uppercase tracking-wider text-right">${isEn ? 'GTL Price' : 'Precio GTL'}</th>
+                                <th class="p-2.5 font-bold uppercase tracking-wider text-center">${isEn ? 'Best Strategy' : 'Mejor Camino'}</th>
+                                <th class="p-2.5 font-bold uppercase tracking-wider text-right">${isEn ? 'Batch Net Profit' : 'Beneficio Lote'}</th>
+                                <th class="p-2.5 font-bold uppercase tracking-wider text-right">${isEn ? 'Profit / Hour' : 'Rendimiento / Hora'}</th>
+                                <th class="p-2.5 font-bold uppercase tracking-wider text-center">${isEn ? 'Action' : 'Acción'}</th>
+                            </tr>
+                        </thead>
+                        <tbody id="rankingTableBody" class="divide-y divide-[#2B2B2B]/10 dark:divide-[#35352E]/50">
+                            <!-- Filas inyectadas dinámicamente -->
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- Panel 1: Parámetros del Cultivo & Receta de Replantación -->
+            <section id="simulatorConfigSection" class="panel p-5 rounded-xl border-2 border-[#2B2B2B] dark:border-[#35352E] bg-[#FAF8F2] dark:bg-[#242420] shadow-[2px_3px_0px_#2B2B2B] dark:shadow-[2px_3px_0px_#000]">
                 <div class="flex flex-wrap items-center justify-between pb-3 mb-4 border-b border-[#2B2B2B]/20 dark:border-[#35352E] gap-2">
                     <h2 class="text-xs font-tech font-bold uppercase tracking-wider text-[#1C1C17] dark:text-[#F4F1E8] flex items-center gap-2">
                         <span class="w-2.5 h-2.5 rounded-full bg-[#2563EB]"></span>
@@ -338,10 +398,15 @@ export function renderMarketView() {
             <!-- Panel 2: Precios de Mercado GTL en Vivo (Editables) -->
             <section class="panel p-5 rounded-xl border-2 border-[#2B2B2B] dark:border-[#35352E] bg-[#FAF8F2] dark:bg-[#242420] shadow-[2px_3px_0px_#2B2B2B] dark:shadow-[2px_3px_0px_#000]">
                 <div class="flex items-center justify-between pb-3 mb-4 border-b border-[#2B2B2B]/20 dark:border-[#35352E]">
-                    <h2 class="text-xs font-tech font-bold uppercase tracking-wider text-[#1C1C17] dark:text-[#F4F1E8] flex items-center gap-2">
-                        <span class="w-2.5 h-2.5 rounded-full bg-[#D97706]"></span>
-                        <span>${isEn ? 'Current GTL Market Prices (Editable)' : 'Precios de Mercado en el GTL (Valores Editables)'}</span>
-                    </h2>
+                    <div>
+                        <h2 class="text-xs font-tech font-bold uppercase tracking-wider text-[#1C1C17] dark:text-[#F4F1E8] flex items-center gap-2">
+                            <span class="w-2.5 h-2.5 rounded-full bg-[#D97706]"></span>
+                            <span>${isEn ? 'Current GTL Market Prices (Editable)' : 'Precios de Mercado en el GTL (Valores Editables)'}</span>
+                        </h2>
+                        <span class="text-[11px] text-[#5F5A4D] dark:text-[#A8A594]">
+                            ${isEn ? 'Preloaded with live GTL rates. Any change immediately recalculates the ranking and simulator.' : 'Cargados con precios reales del GTL. Cualquier ajuste actualiza el ranking y el simulador en tiempo real.'}
+                        </span>
+                    </div>
                     <span id="gtlPriceStatusMsg" class="text-[11px] font-mono text-[#10B981] font-bold"></span>
                 </div>
 
@@ -591,6 +656,47 @@ export function initMarket() {
         updateSimulation();
     };
 
+    window.toggleRankingSort = (sortMode) => {
+        currentRankingSort = sortMode;
+        const btnHourly = document.getElementById('btnSortHourly');
+        const btnTotal = document.getElementById('btnSortTotal');
+        if (btnHourly && btnTotal) {
+            if (sortMode === 'hourly') {
+                btnHourly.className = 'px-2.5 py-1 rounded text-xs font-tech font-bold uppercase transition cursor-pointer bg-[#10B981] text-white shadow-sm';
+                btnTotal.className = 'px-2.5 py-1 rounded text-xs font-tech font-bold uppercase transition cursor-pointer text-[#5F5A4D] dark:text-[#A8A594] hover:text-[#1C1C17] dark:hover:text-[#F4F1E8]';
+            } else {
+                btnTotal.className = 'px-2.5 py-1 rounded text-xs font-tech font-bold uppercase transition cursor-pointer bg-[#10B981] text-white shadow-sm';
+                btnHourly.className = 'px-2.5 py-1 rounded text-xs font-tech font-bold uppercase transition cursor-pointer text-[#5F5A4D] dark:text-[#A8A594] hover:text-[#1C1C17] dark:hover:text-[#F4F1E8]';
+            }
+        }
+        renderGlobalRankingUI();
+    };
+
+    window.loadBerryIntoSimulator = (berryKey) => {
+        const state = getMarketState();
+        state.berry = berryKey;
+
+        const recipeOpts = RECIPE_OPTIONS[berryKey] || [];
+        if (recipeOpts.length > 0) {
+            state.recipeId = recipeOpts[0].id;
+        }
+
+        saveMarketState();
+
+        const berrySelect = document.getElementById('marketBerrySelect');
+        if (berrySelect) berrySelect.value = berryKey;
+
+        populateRecipeSelect(berryKey, state.recipeId);
+        renderPriceCards(berryKey);
+        updateSimulation();
+
+        // Scroll suave al simulador detallado
+        const simSection = document.getElementById('simulatorConfigSection');
+        if (simSection) {
+            simSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+    };
+
     updateSimulation();
 }
 
@@ -618,7 +724,6 @@ export function renderPriceCards(berryKey) {
     if (!container) return;
 
     const state = getMarketState();
-    const isEn = typeof currentLang !== 'undefined' && currentLang === 'en';
     const profile = EXTRACTION_PROFILES[berryKey] || {};
     const recipeOpts = RECIPE_OPTIONS[berryKey] || [];
     
@@ -726,6 +831,208 @@ export function resetMarketPrices() {
 
     renderPriceCards(state.berry);
     updateSimulation();
+}
+
+// =========================================================================
+// CÁLCULO DEL RANKING GLOBAL DE RENTABILIDAD
+// =========================================================================
+export function computeGlobalRanking() {
+    const state = getMarketState();
+    const plots = Math.max(1, state.plots || 72);
+    const yieldVal = state.yield || 5.5;
+    const replantMode = state.replantMode !== false;
+    const toolCost = typeof state.toolCost !== 'undefined' ? state.toolCost : 350;
+    const feePct = typeof state.gtlFee !== 'undefined' ? state.gtlFee : 5;
+    const feeFactor = (100 - feePct) / 100;
+    const totalBerries = Math.round(plots * yieldVal);
+
+    const ranking = [];
+
+    for (const [berryKey, hours] of Object.entries(BERRY_GROWTH_HOURS)) {
+        const berryPrice = state.berryPrices[berryKey] ?? DEFAULT_BERRY_PRICES[berryKey] ?? 1000;
+        const profile = EXTRACTION_PROFILES[berryKey] || {};
+        const recipes = RECIPE_OPTIONS[berryKey] || [];
+
+        // 1. Beneficio Venta Cruda
+        const rawGross = totalBerries * berryPrice;
+        const rawNetGtl = rawGross * feeFactor;
+        let minReplantCost = Infinity;
+        for (const r of recipes) {
+            let cost = 0;
+            for (const req of r.reqs) {
+                const sPrice = state.seedPrices[req.id] ?? DEFAULT_SEED_PRICES[req.id] ?? 750;
+                cost += req.qty * plots * sPrice;
+            }
+            if (cost < minReplantCost) minReplantCost = cost;
+        }
+        if (minReplantCost === Infinity) minReplantCost = 0;
+        const rawProfit = rawNetGtl - (replantMode ? minReplantCost : 0);
+
+        // 2. Beneficio Trituración (Evaluar todas las recetas, elegir la más rentable)
+        let bestCrushProfit = -Infinity;
+        let bestRecipeId = null;
+
+        for (const r of recipes) {
+            const replantNeeds = {};
+            if (replantMode) {
+                for (const req of r.reqs) replantNeeds[req.id] = req.qty * plots;
+            }
+
+            let surplusGross = 0;
+            let deficitCost = 0;
+            const allIds = new Set([...Object.keys(profile), ...Object.keys(replantNeeds)]);
+
+            for (const sId of allIds) {
+                const produced = totalBerries * (profile[sId] || 0);
+                const needed = replantNeeds[sId] || 0;
+                const sPrice = state.seedPrices[sId] ?? DEFAULT_SEED_PRICES[sId] ?? 750;
+
+                if (produced >= needed) {
+                    surplusGross += (produced - needed) * sPrice;
+                } else {
+                    deficitCost += (needed - produced) * sPrice;
+                }
+            }
+
+            const toolsExpense = totalBerries * toolCost;
+            const surplusNetGtl = surplusGross * feeFactor;
+            const crushProfit = surplusNetGtl - toolsExpense - deficitCost;
+
+            if (crushProfit > bestCrushProfit) {
+                bestCrushProfit = crushProfit;
+                bestRecipeId = r.id;
+            }
+        }
+
+        if (bestCrushProfit === -Infinity) bestCrushProfit = -999999;
+
+        const isCrushBetter = bestCrushProfit > rawProfit;
+        const bestProfit = isCrushBetter ? bestCrushProfit : rawProfit;
+        const strategy = isCrushBetter ? 'crush' : 'raw';
+        const profitPerHour = bestProfit / hours;
+        const profitPerDay = profitPerHour * 24;
+
+        ranking.push({
+            berryKey,
+            displayName: getBerryDisplayName(berryKey),
+            hours,
+            berryPrice,
+            rawProfit: Math.round(rawProfit),
+            crushProfit: Math.round(bestCrushProfit),
+            bestProfit: Math.round(bestProfit),
+            strategy,
+            bestRecipeId,
+            profitPerHour: Math.round(profitPerHour),
+            profitPerDay: Math.round(profitPerDay)
+        });
+    }
+
+    if (currentRankingSort === 'hourly') {
+        ranking.sort((a, b) => b.profitPerHour - a.profitPerHour);
+    } else {
+        ranking.sort((a, b) => b.bestProfit - a.bestProfit);
+    }
+
+    return ranking;
+}
+
+export function renderGlobalRankingUI() {
+    const tableBody = document.getElementById('rankingTableBody');
+    const podiumContainer = document.getElementById('rankingPodiumContainer');
+    if (!tableBody) return;
+
+    const ranking = computeGlobalRanking();
+    const isEn = typeof currentLang !== 'undefined' && currentLang === 'en';
+
+    // 1. Podio TOP 3
+    if (podiumContainer && ranking.length >= 3) {
+        const top3 = ranking.slice(0, 3);
+        const medals = [
+            { pos: '1', border: 'border-[#EAB308]', bg: 'bg-[#EAB308]/10', tag: 'ORO / TOP 1', tagEn: 'GOLD / TOP 1', text: 'text-[#EAB308]' },
+            { pos: '2', border: 'border-[#94A3B8]', bg: 'bg-[#94A3B8]/10', tag: 'PLATA / TOP 2', tagEn: 'SILVER / TOP 2', text: 'text-[#94A3B8]' },
+            { pos: '3', border: 'border-[#D97706]', bg: 'bg-[#D97706]/10', tag: 'BRONCE / TOP 3', tagEn: 'BRONZE / TOP 3', text: 'text-[#D97706]' }
+        ];
+
+        let podiumHtml = '';
+        top3.forEach((item, idx) => {
+            const m = medals[idx];
+            podiumHtml += `
+                <div class="p-3.5 rounded-xl border-2 ${m.border} ${m.bg} shadow-sm flex items-center justify-between transition hover:scale-[1.01]">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-lg bg-[#FAF8F2] dark:bg-[#1A1A16] border border-[#2B2B2B]/30 dark:border-[#35352E] flex items-center justify-center flex-shrink-0 shadow-inner">
+                            <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/${item.berryKey}-berry.png" onerror="this.src='https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/cheri-berry.png'" class="w-7 h-7 pokemon-sprite" alt="${item.displayName}">
+                        </div>
+                        <div>
+                            <span class="text-[10px] font-mono font-black uppercase ${m.text}">${isEn ? m.tagEn : m.tag}</span>
+                            <h4 class="text-xs font-mono font-bold text-[#1C1C17] dark:text-[#F4F1E8] truncate">${item.displayName}</h4>
+                            <div class="flex items-center gap-1.5 mt-0.5">
+                                <span class="text-[10px] font-mono px-1.5 py-0.2 rounded ${item.strategy === 'crush' ? 'bg-[#10B981]/20 text-[#10B981]' : 'bg-[#3B82F6]/20 text-[#3B82F6]'} font-bold uppercase">
+                                    ${item.strategy === 'crush' ? (isEn ? 'CRUSH' : 'TRITURAR') : (isEn ? 'RAW' : 'CRUDA')}
+                                </span>
+                                <span class="text-[10px] font-mono text-[#5F5A4D] dark:text-[#A8A594]">${item.hours}h</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="text-right flex-shrink-0">
+                        <span class="text-sm sm:text-base font-mono font-black ${item.profitPerHour >= 0 ? 'text-[#10B981]' : 'text-[#E63946]'} block tabular-nums">
+                            ${item.profitPerHour >= 0 ? '+' : ''}${formatMoney(item.profitPerHour)}/h
+                        </span>
+                        <span class="text-[10px] font-mono text-[#5F5A4D] dark:text-[#A8A594] block tabular-nums">
+                            ${formatMoney(item.bestProfit)} ${isEn ? 'batch' : 'lote'}
+                        </span>
+                    </div>
+                </div>
+            `;
+        });
+        podiumContainer.innerHTML = podiumHtml;
+    }
+
+    // 2. Filas de la Tabla Completa
+    let tableHtml = '';
+    ranking.forEach((item, idx) => {
+        const isSelected = state.berry === item.berryKey;
+        tableHtml += `
+            <tr class="hover:bg-[#EDE8DC]/50 dark:hover:bg-[#20201C]/80 transition-colors ${isSelected ? 'bg-[#FFC800]/10 border-l-4 border-l-[#FFC800]' : ''}">
+                <td class="p-2.5 text-center font-bold text-[#5F5A4D] dark:text-[#A8A594]">
+                    #${idx + 1}
+                </td>
+                <td class="p-2.5">
+                    <div class="flex items-center gap-2">
+                        <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/${item.berryKey}-berry.png" onerror="this.src='https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/cheri-berry.png'" class="w-5 h-5 pokemon-sprite" alt="">
+                        <span class="font-bold text-[#1C1C17] dark:text-[#F4F1E8]">${item.displayName}</span>
+                        <span class="text-[10px] font-mono bg-[#EDE8DC] dark:bg-[#1E1E1A] text-[#5F5A4D] dark:text-[#A8A594] px-1.5 py-0.5 rounded border border-[#2B2B2B]/20 dark:border-[#35352E]">
+                            ${item.hours}h
+                        </span>
+                    </div>
+                </td>
+                <td class="p-2.5 text-right font-bold tabular-nums text-[#1C1C17] dark:text-[#F4F1E8]">
+                    $${item.berryPrice.toLocaleString()}
+                </td>
+                <td class="p-2.5 text-center">
+                    <span class="text-[10px] font-mono px-2 py-0.5 rounded font-bold uppercase ${item.strategy === 'crush' ? 'bg-[#10B981]/20 text-[#10B981] border border-[#10B981]/40' : 'bg-[#3B82F6]/20 text-[#3B82F6] border border-[#3B82F6]/40'}">
+                        ${item.strategy === 'crush' ? (isEn ? 'CRUSH SEEDS' : 'TRITURAR') : (isEn ? 'SELL RAW' : 'VENTA CRUDA')}
+                    </span>
+                </td>
+                <td class="p-2.5 text-right font-bold tabular-nums ${item.bestProfit >= 0 ? 'text-[#1C1C17] dark:text-[#F4F1E8]' : 'text-[#E63946]'}">
+                    ${item.bestProfit >= 0 ? '' : '-'}${formatMoney(Math.abs(item.bestProfit))}
+                </td>
+                <td class="p-2.5 text-right font-black tabular-nums ${item.profitPerHour >= 0 ? 'text-[#10B981]' : 'text-[#E63946]'}">
+                    ${item.profitPerHour >= 0 ? '+' : '-'}${formatMoney(Math.abs(item.profitPerHour))}/h
+                    <span class="block text-[10px] font-normal text-[#5F5A4D] dark:text-[#A8A594]">
+                        (${formatMoney(item.profitPerDay)}/${isEn ? 'day' : 'día'})
+                    </span>
+                </td>
+                <td class="p-2.5 text-center">
+                    <button type="button" onclick="window.loadBerryIntoSimulator('${item.berryKey}')" 
+                        class="px-2.5 py-1 text-[11px] font-tech font-bold uppercase rounded bg-[#EDE8DC] dark:bg-[#2E2E27] hover:bg-[#FFC800] hover:text-[#1C1C17] border border-[#2B2B2B] dark:border-[#35352E] text-[#1C1C17] dark:text-[#F4F1E8] transition cursor-pointer shadow-sm">
+                        ${isEn ? 'Simulate' : 'Simular'}
+                    </button>
+                </td>
+            </tr>
+        `;
+    });
+
+    tableBody.innerHTML = tableHtml;
 }
 
 // =========================================================================
@@ -848,7 +1155,7 @@ export function updateSimulation() {
     if (tableBody) tableBody.innerHTML = tableHtml;
 
     // =========================================================================
-    // CÁLCULO DE RESULTADOS FINALES Y COMPARATIVA
+    // CÁLCULO DE RESULTADOS FINALES Y COMPARATIVA DETALLADA
     // =========================================================================
     const berryPrice = state.berryPrices[berryKey] ?? DEFAULT_BERRY_PRICES[berryKey] ?? 1000;
 
@@ -908,74 +1215,79 @@ export function updateSimulation() {
     // VEREDICTO DINÁMICO TÁCTICO
     // =========================================================================
     const banner = document.getElementById('marketVerdictBanner');
-    if (!banner) return;
+    if (banner) {
+        const diff = crushFinalProfit - rawFinalProfit;
+        const absDiff = Math.abs(diff);
+        const diffPct = rawFinalProfit > 0 ? ((absDiff / rawFinalProfit) * 100).toFixed(1) : 0;
+        const diffPerBerry = (absDiff / totalBerries).toFixed(0);
 
-    const diff = crushFinalProfit - rawFinalProfit;
-    const absDiff = Math.abs(diff);
-    const diffPct = rawFinalProfit > 0 ? ((absDiff / rawFinalProfit) * 100).toFixed(1) : 0;
-    const diffPerBerry = (absDiff / totalBerries).toFixed(0);
+        if (diff > 0) {
+            // Conviene Triturar
+            banner.className = 'p-5 sm:p-6 rounded-2xl border-2 border-[#10B981] bg-[#10B981]/15 dark:bg-[#064E3B]/40 shadow-lg text-[#1C1C17] dark:text-[#F4F1E8] transition-all';
+            banner.innerHTML = `
+                <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                    <div class="flex items-start gap-3.5">
+                        <div class="p-2.5 rounded-xl bg-[#10B981] text-white flex-shrink-0 shadow-sm mt-0.5">
+                            <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/></svg>
+                        </div>
+                        <div>
+                            <span class="text-xs font-mono font-bold uppercase tracking-wider text-[#059669] dark:text-[#34D399] block mb-0.5">
+                                ${isEn ? 'TACTICAL VERDICT: MORE PROFITABLE TO CRUSH' : 'VEREDICTO TÁCTICO: MÁS A CUENTA TRITURAR'}
+                            </span>
+                            <h4 class="text-lg sm:text-xl font-tech font-extrabold uppercase text-[#1C1C17] dark:text-[#F4F1E8]">
+                                ${isEn ? 'CRUSH BERRIES AND SELL SURPLUS SEEDS' : 'TRITURA LAS BAYAS Y VENDE LAS SEMILLAS'}
+                            </h4>
+                            <p class="text-xs font-sans text-[#5F5A4D] dark:text-[#D1D5DB] mt-1 max-w-2xl leading-relaxed">
+                                ${isEn
+                                    ? `Crushing nets you <strong>+${formatMoney(Math.round(absDiff))} more</strong> (+${diffPct}%) than selling raw berries. You secure your replanting seeds for all ${plots} plots and sell surplus on the GTL.`
+                                    : `Triturar te deja <strong>+${formatMoney(Math.round(absDiff))} más de ganancia limpia</strong> (+${diffPct}%) respecto a vender la baya cruda (+${diffPerBerry}$ por baya). Además tus semillas para replantar las ${plots} parcelas quedan 100% aseguradas en tu inventario.`
+                                }
+                            </p>
+                        </div>
+                    </div>
 
-    if (diff > 0) {
-        // Conviene Triturar
-        banner.className = 'p-5 sm:p-6 rounded-2xl border-2 border-[#10B981] bg-[#10B981]/15 dark:bg-[#064E3B]/40 shadow-lg text-[#1C1C17] dark:text-[#F4F1E8] transition-all';
-        banner.innerHTML = `
-            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                <div class="flex items-start gap-3.5">
-                    <div class="p-2.5 rounded-xl bg-[#10B981] text-white flex-shrink-0 shadow-sm mt-0.5">
-                        <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/></svg>
-                    </div>
-                    <div>
-                        <span class="text-xs font-mono font-bold uppercase tracking-wider text-[#059669] dark:text-[#34D399] block mb-0.5">
-                            ${isEn ? 'TACTICAL VERDICT: MORE PROFITABLE TO CRUSH' : 'VEREDICTO TÁCTICO: MÁS A CUENTA TRITURAR'}
-                        </span>
-                        <h4 class="text-lg sm:text-xl font-tech font-extrabold uppercase text-[#1C1C17] dark:text-[#F4F1E8]">
-                            ${isEn ? 'CRUSH BERRIES AND SELL SURPLUS SEEDS' : 'TRITURA LAS BAYAS Y VENDE LAS SEMILLAS'}
-                        </h4>
-                        <p class="text-xs font-sans text-[#5F5A4D] dark:text-[#D1D5DB] mt-1 max-w-2xl leading-relaxed">
-                            ${isEn
-                                ? `Crushing nets you <strong>+${formatMoney(Math.round(absDiff))} more</strong> (+${diffPct}%) than selling raw berries. You secure your replanting seeds for all ${plots} plots and sell surplus on the GTL.`
-                                : `Triturar te deja <strong>+${formatMoney(Math.round(absDiff))} más de ganancia limpia</strong> (+${diffPct}%) respecto a vender la baya cruda (+${diffPerBerry}$ por baya). Además tus semillas para replantar las ${plots} parcelas quedan 100% aseguradas en tu inventario.`
-                            }
-                        </p>
-                    </div>
-                </div>
-
-                <div class="bg-[#FAF8F2] dark:bg-[#242420] border-2 border-[#10B981] p-3.5 rounded-xl text-right flex-shrink-0 shadow-sm">
-                    <span class="text-[11px] font-mono text-[#5F5A4D] dark:text-[#A8A594] uppercase font-bold block">${isEn ? 'Extra Net Advantage' : 'Ganancia Extra Neta'}</span>
-                    <span class="text-2xl sm:text-3xl font-mono font-black text-[#10B981] tabular-nums">+${formatMoney(Math.round(absDiff))}</span>
-                </div>
-            </div>
-        `;
-    } else {
-        // Conviene Vender Baya Cruda
-        banner.className = 'p-5 sm:p-6 rounded-2xl border-2 border-[#3B82F6] bg-[#3B82F6]/15 dark:bg-[#1E3A8A]/40 shadow-lg text-[#1C1C17] dark:text-[#F4F1E8] transition-all';
-        banner.innerHTML = `
-            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                <div class="flex items-start gap-3.5">
-                    <div class="p-2.5 rounded-xl bg-[#3B82F6] text-white flex-shrink-0 shadow-sm mt-0.5">
-                        <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                    </div>
-                    <div>
-                        <span class="text-xs font-mono font-bold uppercase tracking-wider text-[#2563EB] dark:text-[#60A5FA] block mb-0.5">
-                            ${isEn ? 'TACTICAL VERDICT: MORE PROFITABLE TO SELL RAW' : 'VEREDICTO TÁCTICO: MÁS A CUENTA VENDER CRUDA'}
-                        </span>
-                        <h4 class="text-lg sm:text-xl font-tech font-extrabold uppercase text-[#1C1C17] dark:text-[#F4F1E8]">
-                            ${isEn ? 'SELL RAW BERRIES DIRECTLY ON GTL' : 'VENDE LAS BAYAS CRUDAS DIRECTAMENTE EN EL GTL'}
-                        </h4>
-                        <p class="text-xs font-sans text-[#5F5A4D] dark:text-[#D1D5DB] mt-1 max-w-2xl leading-relaxed">
-                            ${isEn
-                                ? `Selling raw berries nets you <strong>+${formatMoney(Math.round(absDiff))} more</strong> (+${diffPct}%) than crushing. The $350 tool expense and current seed market prices make raw sale more profitable.`
-                                : `Vender las bayas crudas te deja <strong>+${formatMoney(Math.round(absDiff))} más</strong> (+${diffPct}%) que triturar. El gasto de herramientas ($350 c/u) y los precios actuales de las semillas no compensan la trituración para este lote.`
-                            }
-                        </p>
+                    <div class="bg-[#FAF8F2] dark:bg-[#242420] border-2 border-[#10B981] p-3.5 rounded-xl text-right flex-shrink-0 shadow-sm">
+                        <span class="text-[11px] font-mono text-[#5F5A4D] dark:text-[#A8A594] uppercase font-bold block">${isEn ? 'Extra Net Advantage' : 'Ganancia Extra Neta'}</span>
+                        <span class="text-2xl sm:text-3xl font-mono font-black text-[#10B981] tabular-nums">+${formatMoney(Math.round(absDiff))}</span>
                     </div>
                 </div>
+            `;
+        } else {
+            // Conviene Vender Baya Cruda
+            banner.className = 'p-5 sm:p-6 rounded-2xl border-2 border-[#3B82F6] bg-[#3B82F6]/15 dark:bg-[#1E3A8A]/40 shadow-lg text-[#1C1C17] dark:text-[#F4F1E8] transition-all';
+            banner.innerHTML = `
+                <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                    <div class="flex items-start gap-3.5">
+                        <div class="p-2.5 rounded-xl bg-[#3B82F6] text-white flex-shrink-0 shadow-sm mt-0.5">
+                            <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                        </div>
+                        <div>
+                            <span class="text-xs font-mono font-bold uppercase tracking-wider text-[#2563EB] dark:text-[#60A5FA] block mb-0.5">
+                                ${isEn ? 'TACTICAL VERDICT: MORE PROFITABLE TO SELL RAW' : 'VEREDICTO TÁCTICO: MÁS A CUENTA VENDER CRUDA'}
+                            </span>
+                            <h4 class="text-lg sm:text-xl font-tech font-extrabold uppercase text-[#1C1C17] dark:text-[#F4F1E8]">
+                                ${isEn ? 'SELL RAW BERRIES DIRECTLY ON GTL' : 'VENDE LAS BAYAS CRUDAS DIRECTAMENTE EN EL GTL'}
+                            </h4>
+                            <p class="text-xs font-sans text-[#5F5A4D] dark:text-[#D1D5DB] mt-1 max-w-2xl leading-relaxed">
+                                ${isEn
+                                    ? `Selling raw berries nets you <strong>+${formatMoney(Math.round(absDiff))} more</strong> (+${diffPct}%) than crushing. The $350 tool expense and current seed market prices make raw sale more profitable.`
+                                    : `Vender las bayas crudas te deja <strong>+${formatMoney(Math.round(absDiff))} más</strong> (+${diffPct}%) que triturar. El gasto de herramientas ($350 c/u) y los precios actuales de las semillas no compensan la trituración para este lote.`
+                                }
+                            </p>
+                        </div>
+                    </div>
 
-                <div class="bg-[#FAF8F2] dark:bg-[#242420] border-2 border-[#3B82F6] p-3.5 rounded-xl text-right flex-shrink-0 shadow-sm">
-                    <span class="text-[11px] font-mono text-[#5F5A4D] dark:text-[#A8A594] uppercase font-bold block">${isEn ? 'Raw Berry Advantage' : 'Ventaja Venta Cruda'}</span>
-                    <span class="text-2xl sm:text-3xl font-mono font-black text-[#3B82F6] tabular-nums">+${formatMoney(Math.round(absDiff))}</span>
+                    <div class="bg-[#FAF8F2] dark:bg-[#242420] border-2 border-[#3B82F6] p-3.5 rounded-xl text-right flex-shrink-0 shadow-sm">
+                        <span class="text-[11px] font-mono text-[#5F5A4D] dark:text-[#A8A594] uppercase font-bold block">${isEn ? 'Raw Berry Advantage' : 'Ventaja Venta Cruda'}</span>
+                        <span class="text-2xl sm:text-3xl font-mono font-black text-[#3B82F6] tabular-nums">+${formatMoney(Math.round(absDiff))}</span>
+                    </div>
                 </div>
-            </div>
-        `;
+            `;
+        }
     }
+
+    // =========================================================================
+    // ACTUALIZAR EL RANKING GLOBAL DE RENTABILIDAD
+    // =========================================================================
+    renderGlobalRankingUI();
 }

@@ -215,33 +215,33 @@ export const SEED_COLORS = {
 };
 
 export const DEFAULT_SEED_PRICES = {
-    picante: 750,
-    dulce: 750,
-    seca: 750,
-    amarga: 750,
-    acida: 750,
-    v_picante: 1800,
-    v_dulce: 1200,
-    v_seca: 1200,
-    v_amarga: 1200,
-    v_acida: 1200
+    picante: 775,
+    dulce: 770,
+    seca: 765,
+    amarga: 783,
+    acida: 779,
+    v_picante: 1750,
+    v_dulce: 1760,
+    v_seca: 1770,
+    v_amarga: 1760,
+    v_acida: 1760
 };
 
 export const DEFAULT_BERRY_PRICES = {
-    leppa: 1050,
-    lum: 1500,
-    sitrus: 1300,
-    pomeg: 950,
-    kelpsy: 950,
-    qualot: 950,
-    hondew: 950,
-    grepa: 950,
-    tamato: 950,
-    cheri: 550,
-    pecha: 550,
-    rawst: 550,
-    chesto: 550,
-    aspear: 550
+    leppa: 715,
+    lum: 900,
+    sitrus: 940,
+    pomeg: 735,
+    kelpsy: 700,
+    qualot: 707,
+    hondew: 700,
+    grepa: 710,
+    tamato: 699,
+    cheri: 660,
+    pecha: 650,
+    rawst: 645,
+    chesto: 738,
+    aspear: 650
 };
 
 export const EXTRACTION_PROFILES = {
