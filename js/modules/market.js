@@ -56,6 +56,12 @@ export const BERRY_GROWTH_HOURS = {
     pomeg: 44, kelpsy: 44, qualot: 44, hondew: 44, grepa: 44, tamato: 44
 };
 
+export const BERRY_CATEGORIES = {
+    basic: ['cheri', 'pecha', 'rawst', 'chesto', 'aspear'],
+    popular: ['leppa', 'lum', 'sitrus'],
+    ev: ['pomeg', 'kelpsy', 'qualot', 'hondew', 'grepa', 'tamato']
+};
+
 export function getBerryDisplayName(key) {
     const isEn = typeof currentLang !== 'undefined' && currentLang === 'en';
     if (isEn && BERRY_LABELS_EN[key]) return BERRY_LABELS_EN[key];
@@ -130,6 +136,7 @@ const STORAGE_PREFS_KEY = 'pokemmo_market_unified_prefs';
 // =========================================================================
 let marketState = null;
 let currentRankingSort = 'hourly'; // 'hourly' | 'total'
+let currentPriceHubTab = 'berries'; // 'berries' | 'seeds'
 
 export function getMarketState() {
     if (!marketState) {
@@ -211,7 +218,7 @@ export function renderMarketView() {
                             </span>
                         </div>
                         <p class="text-xs font-sans text-[#5F5A4D] dark:text-[#A8A594] mt-0.5">
-                            ${isEn ? 'Compare selling raw berries vs. crushing into seeds, analyze global berry profitability, and find the most lucrative crops.' : 'Compara vender bayas crudas vs. triturar, analiza el ranking global de rentabilidad de todas las bayas y descubre cuál te da más dinero neto.'}
+                            ${isEn ? 'Audit all 14 crops, edit market prices, compare selling raw berries vs. crushing, and find the most profitable paths.' : 'Audita las 14 especies, edita los precios de bayas y semillas, compara venta cruda vs. triturar y descubre qué te deja más dinero neto.'}
                         </p>
                     </div>
                 </div>
@@ -265,7 +272,7 @@ export function renderMarketView() {
                             <tr class="bg-[#EDE8DC] dark:bg-[#1E1E1A] text-[#5F5A4D] dark:text-[#A8A594] border-b-2 border-[#2B2B2B] dark:border-[#35352E]">
                                 <th class="p-2.5 font-bold uppercase tracking-wider text-center w-12">#</th>
                                 <th class="p-2.5 font-bold uppercase tracking-wider">${isEn ? 'Berry & Cycle' : 'Baya y Ciclo'}</th>
-                                <th class="p-2.5 font-bold uppercase tracking-wider text-right">${isEn ? 'GTL Price' : 'Precio GTL'}</th>
+                                <th class="p-2.5 font-bold uppercase tracking-wider text-right">${isEn ? 'GTL Price (Editable)' : 'Precio GTL (Editable)'}</th>
                                 <th class="p-2.5 font-bold uppercase tracking-wider text-center">${isEn ? 'Best Strategy' : 'Mejor Camino'}</th>
                                 <th class="p-2.5 font-bold uppercase tracking-wider text-right">${isEn ? 'Batch Net Profit' : 'Beneficio Lote'}</th>
                                 <th class="p-2.5 font-bold uppercase tracking-wider text-right">${isEn ? 'Profit / Hour' : 'Rendimiento / Hora'}</th>
@@ -276,6 +283,43 @@ export function renderMarketView() {
                             <!-- Filas inyectadas dinámicamente -->
                         </tbody>
                     </table>
+                </div>
+            </section>
+
+            <!-- Panel NUEVO: EDITOR CENTRAL DE PRECIOS GTL (BAYAS Y SEMILLAS) -->
+            <section id="centralPriceHubSection" class="panel p-5 rounded-xl border-2 border-[#2B2B2B] dark:border-[#35352E] bg-[#FAF8F2] dark:bg-[#242420] shadow-[2px_3px_0px_#2B2B2B] dark:shadow-[2px_3px_0px_#000]">
+                <div class="flex flex-wrap items-center justify-between pb-3 mb-4 border-b border-[#2B2B2B]/20 dark:border-[#35352E] gap-3">
+                    <div>
+                        <div class="flex items-center gap-2 flex-wrap">
+                            <h2 class="text-sm font-tech font-bold uppercase tracking-wider text-[#1C1C17] dark:text-[#F4F1E8] flex items-center gap-2">
+                                <span class="w-3 h-3 rounded-full bg-[#10B981]"></span>
+                                <span>${isEn ? 'Central GTL Price Editor' : 'Editor Central de Precios GTL'}</span>
+                            </h2>
+                            <span class="text-[10px] font-mono uppercase bg-[#10B981]/20 text-[#10B981] px-2 py-0.5 rounded font-bold border border-[#10B981]/40">
+                                ${isEn ? '14 Berries + 10 Seeds' : '14 Bayas + 10 Semillas'}
+                            </span>
+                        </div>
+                        <p class="text-[11px] font-sans text-[#5F5A4D] dark:text-[#A8A594] mt-0.5">
+                            ${isEn ? 'Edit all market prices in one place. Changes instantly update the ranking and simulation.' : 'Modifica todos los precios del mercado desde un solo lugar. Cualquier cambio actualiza el ranking y el simulador de inmediato.'}
+                        </p>
+                    </div>
+
+                    <!-- Selector de Sub-Pestaña del Hub -->
+                    <div class="flex items-center gap-1.5 bg-[#EDE8DC] dark:bg-[#1E1E1A] p-1 rounded-lg border border-[#2B2B2B]/30 dark:border-[#35352E]">
+                        <button type="button" id="btnHubTabBerries" onclick="window.switchPriceHubTab('berries')" 
+                            class="px-3 py-1 rounded text-xs font-tech font-bold uppercase transition cursor-pointer ${currentPriceHubTab === 'berries' ? 'bg-[#2563EB] text-white shadow-sm' : 'text-[#5F5A4D] dark:text-[#A8A594] hover:text-[#1C1C17] dark:hover:text-[#F4F1E8]'}">
+                            ${isEn ? 'Berries (14)' : 'Bayas (14)'}
+                        </button>
+                        <button type="button" id="btnHubTabSeeds" onclick="window.switchPriceHubTab('seeds')" 
+                            class="px-3 py-1 rounded text-xs font-tech font-bold uppercase transition cursor-pointer ${currentPriceHubTab === 'seeds' ? 'bg-[#2563EB] text-white shadow-sm' : 'text-[#5F5A4D] dark:text-[#A8A594] hover:text-[#1C1C17] dark:hover:text-[#F4F1E8]'}">
+                            ${isEn ? 'Seeds (10)' : 'Semillas (10)'}
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Contenedor Dinámico del Hub -->
+                <div id="priceHubContentContainer">
+                    <!-- Inyectado dinámicamente según la pestaña activa -->
                 </div>
             </section>
 
@@ -395,23 +439,20 @@ export function renderMarketView() {
                 </div>
             </section>
 
-            <!-- Panel 2: Precios de Mercado GTL en Vivo (Editables) -->
+            <!-- Panel 2: Precios de Mercado GTL para la Baya Actual en Detalle -->
             <section class="panel p-5 rounded-xl border-2 border-[#2B2B2B] dark:border-[#35352E] bg-[#FAF8F2] dark:bg-[#242420] shadow-[2px_3px_0px_#2B2B2B] dark:shadow-[2px_3px_0px_#000]">
                 <div class="flex items-center justify-between pb-3 mb-4 border-b border-[#2B2B2B]/20 dark:border-[#35352E]">
                     <div>
                         <h2 class="text-xs font-tech font-bold uppercase tracking-wider text-[#1C1C17] dark:text-[#F4F1E8] flex items-center gap-2">
                             <span class="w-2.5 h-2.5 rounded-full bg-[#D97706]"></span>
-                            <span>${isEn ? 'Current GTL Market Prices (Editable)' : 'Precios de Mercado en el GTL (Valores Editables)'}</span>
+                            <span>${isEn ? 'Current Selection GTL Breakdown' : 'Precios de la Baya Seleccionada y sus Semillas'}</span>
                         </h2>
-                        <span class="text-[11px] text-[#5F5A4D] dark:text-[#A8A594]">
-                            ${isEn ? 'Preloaded with live GTL rates. Any change immediately recalculates the ranking and simulator.' : 'Cargados con precios reales del GTL. Cualquier ajuste actualiza el ranking y el simulador en tiempo real.'}
-                        </span>
                     </div>
                     <span id="gtlPriceStatusMsg" class="text-[11px] font-mono text-[#10B981] font-bold"></span>
                 </div>
 
                 <div id="marketPricesContainer" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
-                    <!-- Inyectado dinámicamente: Tarjeta de Precio de la Baya + Tarjetas de las Semillas asociadas -->
+                    <!-- Inyectado dinámicamente -->
                 </div>
             </section>
 
@@ -554,6 +595,7 @@ export function initMarket() {
 
     populateRecipeSelect(state.berry, state.recipeId);
     renderPriceCards(state.berry);
+    renderPriceHubUI();
 
     // Eventos
     if (berrySelect) {
@@ -697,6 +739,70 @@ export function initMarket() {
         }
     };
 
+    window.switchPriceHubTab = (tabName) => {
+        currentPriceHubTab = tabName;
+        const btnBerries = document.getElementById('btnHubTabBerries');
+        const btnSeeds = document.getElementById('btnHubTabSeeds');
+        if (btnBerries && btnSeeds) {
+            if (tabName === 'berries') {
+                btnBerries.className = 'px-3 py-1 rounded text-xs font-tech font-bold uppercase transition cursor-pointer bg-[#2563EB] text-white shadow-sm';
+                btnSeeds.className = 'px-3 py-1 rounded text-xs font-tech font-bold uppercase transition cursor-pointer text-[#5F5A4D] dark:text-[#A8A594] hover:text-[#1C1C17] dark:hover:text-[#F4F1E8]';
+            } else {
+                btnSeeds.className = 'px-3 py-1 rounded text-xs font-tech font-bold uppercase transition cursor-pointer bg-[#2563EB] text-white shadow-sm';
+                btnBerries.className = 'px-3 py-1 rounded text-xs font-tech font-bold uppercase transition cursor-pointer text-[#5F5A4D] dark:text-[#A8A594] hover:text-[#1C1C17] dark:hover:text-[#F4F1E8]';
+            }
+        }
+        renderPriceHubUI();
+    };
+
+    window.updateHubBerryPrice = (berryKey, val) => {
+        const p = Math.max(0, parseInt(val) || 0);
+        const state = getMarketState();
+        state.berryPrices[berryKey] = p;
+        saveMarketState();
+
+        // Si es la baya activa en el simulador, sincronizar su input
+        if (state.berry === berryKey) {
+            const bInput = document.getElementById('priceBerryInput');
+            if (bInput && document.activeElement !== bInput) {
+                bInput.value = p;
+            }
+        }
+
+        // Sincronizar input en la tabla del ranking si existe
+        const rankInp = document.getElementById(`rank-berry-price-${berryKey}`);
+        if (rankInp && document.activeElement !== rankInp) {
+            rankInp.value = p;
+        }
+
+        updateSimulation();
+    };
+
+    window.updateHubSeedPrice = (seedId, val) => {
+        const p = Math.max(0, parseInt(val) || 0);
+        const state = getMarketState();
+        state.seedPrices[seedId] = p;
+        saveMarketState();
+
+        // Sincronizar tarjeta detallada si está visible
+        const sInput = document.querySelector(`.seed-price-input[data-seedid="${seedId}"]`);
+        if (sInput && document.activeElement !== sInput) {
+            sInput.value = p;
+        }
+
+        updateSimulation();
+    };
+
+    window.updateRankingBerryPrice = (berryKey, val) => {
+        window.updateHubBerryPrice(berryKey, val);
+        
+        // Sincronizar input del hub si está abierto
+        const hubInp = document.getElementById(`hub-berry-${berryKey}`);
+        if (hubInp && document.activeElement !== hubInp) {
+            hubInp.value = Math.max(0, parseInt(val) || 0);
+        }
+    };
+
     updateSimulation();
 }
 
@@ -785,6 +891,18 @@ export function renderPriceCards(berryKey) {
             const val = parseInt(e.target.value) || 0;
             state.berryPrices[berryKey] = val;
             saveMarketState();
+            
+            // Sincronizar input del hub
+            const hubInp = document.getElementById(`hub-berry-${berryKey}`);
+            if (hubInp && document.activeElement !== hubInp) {
+                hubInp.value = val;
+            }
+            // Sincronizar input de la tabla
+            const rankInp = document.getElementById(`rank-berry-price-${berryKey}`);
+            if (rankInp && document.activeElement !== rankInp) {
+                rankInp.value = val;
+            }
+
             updateSimulation();
         });
     }
@@ -795,9 +913,167 @@ export function renderPriceCards(berryKey) {
             const val = parseInt(e.target.value) || 0;
             state.seedPrices[sId] = val;
             saveMarketState();
+
+            // Sincronizar input del hub
+            const hubInp = document.getElementById(`hub-seed-${sId}`);
+            if (hubInp && document.activeElement !== hubInp) {
+                hubInp.value = val;
+            }
+
             updateSimulation();
         });
     });
+}
+
+// =========================================================================
+// RENDERIZADO DEL EDITOR CENTRAL DE PRECIOS (HUB)
+// =========================================================================
+export function renderPriceHubUI() {
+    const container = document.getElementById('priceHubContentContainer');
+    if (!container) return;
+
+    const state = getMarketState();
+    const isEn = typeof currentLang !== 'undefined' && currentLang === 'en';
+
+    if (currentPriceHubTab === 'berries') {
+        let html = `
+            <div class="space-y-4 animate-fade-in">
+        `;
+
+        // Secciones por categorías
+        const categories = [
+            { key: 'basic', label: isEn ? 'Basic 16h Status Berries' : 'Bayas Básicas (16h - Curan Estados)', color: 'border-l-4 border-l-[#2563EB]' },
+            { key: 'popular', label: isEn ? 'High Demand & Utility Berries' : 'Bayas Más Populares y Utilidad (PP y Curación)', color: 'border-l-4 border-l-[#10B981]' },
+            { key: 'ev', label: isEn ? 'EV-Reducing Berries (44h)' : 'Bayas Reductoras de EVs (44h)', color: 'border-l-4 border-l-[#8B5CF6]' }
+        ];
+
+        categories.forEach(cat => {
+            html += `
+                <div class="bg-[#EDE8DC]/40 dark:bg-[#1E1E1A] p-3.5 rounded-xl border border-[#2B2B2B]/20 dark:border-[#35352E]">
+                    <h3 class="text-xs font-tech font-bold uppercase tracking-wider text-[#5F5A4D] dark:text-[#A8A594] mb-3 ${cat.color} pl-2">
+                        ${cat.label}
+                    </h3>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
+            `;
+
+            BERRY_CATEGORIES[cat.key].forEach(berryKey => {
+                const price = state.berryPrices[berryKey] ?? DEFAULT_BERRY_PRICES[berryKey] ?? 1000;
+                const name = getBerryDisplayName(berryKey);
+                const hours = BERRY_GROWTH_HOURS[berryKey] || 16;
+                const isSelected = state.berry === berryKey;
+
+                html += `
+                    <div class="bg-[#FAF8F2] dark:bg-[#20201C] p-3 rounded-xl border-2 ${isSelected ? 'border-[#FFC800] shadow-[0_0_8px_rgba(255,200,0,0.3)]' : 'border-[#2B2B2B]/30 dark:border-[#35352E]'} shadow-sm flex flex-col justify-between transition">
+                        <div class="flex items-center justify-between gap-1 mb-2">
+                            <div class="flex items-center gap-1.5 truncate">
+                                <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/${berryKey}-berry.png" onerror="this.src='https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/cheri-berry.png'" class="w-6 h-6 pokemon-sprite flex-shrink-0" alt="">
+                                <span class="text-xs font-mono font-bold text-[#1C1C17] dark:text-[#F4F1E8] truncate" title="${name}">
+                                    ${name}
+                                </span>
+                            </div>
+                            <span class="text-[10px] font-mono text-[#5F5A4D] dark:text-[#A8A594] bg-[#EDE8DC] dark:bg-[#1E1E1A] px-1 rounded flex-shrink-0">
+                                ${hours}h
+                            </span>
+                        </div>
+                        <div class="flex items-center gap-1.5">
+                            <span class="text-xs font-mono font-bold text-[#5F5A4D] dark:text-[#A8A594]">$</span>
+                            <input type="number" id="hub-berry-${berryKey}" value="${price}" min="1" step="10" 
+                                oninput="window.updateHubBerryPrice('${berryKey}', this.value)"
+                                class="w-full p-1.5 text-xs font-mono font-bold text-right rounded-lg bg-[#EDE8DC] dark:bg-[#1A1A16] border border-[#2B2B2B]/40 dark:border-[#35352E] text-[#1C1C17] dark:text-[#F4F1E8] focus:border-[#FFC800] outline-none">
+                        </div>
+                    </div>
+                `;
+            });
+
+            html += `
+                    </div>
+                </div>
+            `;
+        });
+
+        html += `</div>`;
+        container.innerHTML = html;
+    } else {
+        // Tab de Semillas (10 semillas de extracción)
+        const simpleSeeds = ['picante', 'dulce', 'seca', 'amarga', 'acida'];
+        const verySeeds = ['v_picante', 'v_dulce', 'v_seca', 'v_amarga', 'v_acida'];
+
+        let html = `
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 animate-fade-in">
+                <!-- Columna 1: Semillas Simples (1 punto) -->
+                <div class="bg-[#EDE8DC]/40 dark:bg-[#1E1E1A] p-3.5 rounded-xl border border-[#2B2B2B]/20 dark:border-[#35352E]">
+                    <h3 class="text-xs font-tech font-bold uppercase tracking-wider text-[#5F5A4D] dark:text-[#A8A594] mb-3 border-l-4 border-l-[#10B981] pl-2">
+                        ${isEn ? 'Plain Seeds (1 Point)' : 'Semillas Simples (1 Punto)'}
+                    </h3>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+        `;
+
+        simpleSeeds.forEach(sId => {
+            const price = state.seedPrices[sId] ?? DEFAULT_SEED_PRICES[sId] ?? 750;
+            const name = getSeedName(sId);
+            const colorClass = SEED_COLORS[sId] || 'text-[#1C1C17] dark:text-[#F4F1E8]';
+
+            html += `
+                <div class="bg-[#FAF8F2] dark:bg-[#20201C] p-2.5 rounded-xl border border-[#2B2B2B]/30 dark:border-[#35352E] shadow-sm flex items-center justify-between gap-2">
+                    <div class="flex items-center gap-2 truncate">
+                        <span class="w-3 h-3 rounded-full border border-[#2B2B2B] bg-gradient-to-br from-white to-gray-400 flex-shrink-0"></span>
+                        <span class="text-xs font-mono font-bold ${colorClass} truncate" title="${name}">
+                            ${name}
+                        </span>
+                    </div>
+                    <div class="flex items-center gap-1 flex-shrink-0 w-28">
+                        <span class="text-xs font-mono font-bold text-[#5F5A4D] dark:text-[#A8A594]">$</span>
+                        <input type="number" id="hub-seed-${sId}" value="${price}" min="1" step="10" 
+                            oninput="window.updateHubSeedPrice('${sId}', this.value)"
+                            class="w-full p-1.5 text-xs font-mono font-bold text-right rounded-lg bg-[#EDE8DC] dark:bg-[#1A1A16] border border-[#2B2B2B]/40 dark:border-[#35352E] text-[#1C1C17] dark:text-[#F4F1E8] focus:border-[#FFC800] outline-none">
+                    </div>
+                </div>
+            `;
+        });
+
+        html += `
+                    </div>
+                </div>
+
+                <!-- Columna 2: Semillas Muy (2 puntos) -->
+                <div class="bg-[#EDE8DC]/40 dark:bg-[#1E1E1A] p-3.5 rounded-xl border border-[#2B2B2B]/20 dark:border-[#35352E]">
+                    <h3 class="text-xs font-tech font-bold uppercase tracking-wider text-[#5F5A4D] dark:text-[#A8A594] mb-3 border-l-4 border-l-[#8B5CF6] pl-2">
+                        ${isEn ? 'Very Seeds (2 Points / High Value)' : 'Semillas Muy (2 Puntos / Alto Valor)'}
+                    </h3>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+        `;
+
+        verySeeds.forEach(sId => {
+            const price = state.seedPrices[sId] ?? DEFAULT_SEED_PRICES[sId] ?? 1750;
+            const name = getSeedName(sId);
+            const colorClass = SEED_COLORS[sId] || 'text-[#1C1C17] dark:text-[#F4F1E8]';
+
+            html += `
+                <div class="bg-[#FAF8F2] dark:bg-[#20201C] p-2.5 rounded-xl border border-[#2B2B2B]/30 dark:border-[#35352E] shadow-sm flex items-center justify-between gap-2">
+                    <div class="flex items-center gap-2 truncate">
+                        <span class="w-3 h-3 rounded-full border border-[#2B2B2B] bg-gradient-to-br from-white to-gray-400 flex-shrink-0"></span>
+                        <span class="text-xs font-mono font-bold ${colorClass} truncate" title="${name}">
+                            ${name}
+                        </span>
+                    </div>
+                    <div class="flex items-center gap-1 flex-shrink-0 w-28">
+                        <span class="text-xs font-mono font-bold text-[#5F5A4D] dark:text-[#A8A594]">$</span>
+                        <input type="number" id="hub-seed-${sId}" value="${price}" min="1" step="10" 
+                            oninput="window.updateHubSeedPrice('${sId}', this.value)"
+                            class="w-full p-1.5 text-xs font-mono font-bold text-right rounded-lg bg-[#EDE8DC] dark:bg-[#1A1A16] border border-[#2B2B2B]/40 dark:border-[#35352E] text-[#1C1C17] dark:text-[#F4F1E8] focus:border-[#FFC800] outline-none">
+                    </div>
+                </div>
+            `;
+        });
+
+        html += `
+                    </div>
+                </div>
+            </div>
+        `;
+
+        container.innerHTML = html;
+    }
 }
 
 export function saveCurrentInputsToMemory() {
@@ -830,6 +1106,7 @@ export function resetMarketPrices() {
     if (feeInput) feeInput.value = 5;
 
     renderPriceCards(state.berry);
+    renderPriceHubUI();
     updateSimulation();
 }
 
@@ -942,6 +1219,7 @@ export function renderGlobalRankingUI() {
     if (!tableBody) return;
 
     const ranking = computeGlobalRanking();
+    const state = getMarketState();
     const isEn = typeof currentLang !== 'undefined' && currentLang === 'en';
 
     // 1. Podio TOP 3
@@ -987,7 +1265,7 @@ export function renderGlobalRankingUI() {
         podiumContainer.innerHTML = podiumHtml;
     }
 
-    // 2. Filas de la Tabla Completa
+    // 2. Filas de la Tabla Completa con Inputs Editables Directos
     let tableHtml = '';
     ranking.forEach((item, idx) => {
         const isSelected = state.berry === item.berryKey;
@@ -1005,8 +1283,13 @@ export function renderGlobalRankingUI() {
                         </span>
                     </div>
                 </td>
-                <td class="p-2.5 text-right font-bold tabular-nums text-[#1C1C17] dark:text-[#F4F1E8]">
-                    $${item.berryPrice.toLocaleString()}
+                <td class="p-2.5 text-right">
+                    <div class="inline-flex items-center gap-1 bg-[#FAF8F2] dark:bg-[#1A1A16] border border-[#2B2B2B]/30 dark:border-[#35352E] rounded-lg px-2 py-1 focus-within:border-[#FFC800] transition shadow-inner">
+                        <span class="text-xs font-mono text-[#5F5A4D] dark:text-[#A8A594] font-bold">$</span>
+                        <input type="number" id="rank-berry-price-${item.berryKey}" value="${item.berryPrice}" min="1" step="10" 
+                            oninput="window.updateRankingBerryPrice('${item.berryKey}', this.value)"
+                            class="w-20 text-right font-mono font-bold text-xs bg-transparent text-[#1C1C17] dark:text-[#F4F1E8] outline-none">
+                    </div>
                 </td>
                 <td class="p-2.5 text-center">
                     <span class="text-[10px] font-mono px-2 py-0.5 rounded font-bold uppercase ${item.strategy === 'crush' ? 'bg-[#10B981]/20 text-[#10B981] border border-[#10B981]/40' : 'bg-[#3B82F6]/20 text-[#3B82F6] border border-[#3B82F6]/40'}">
