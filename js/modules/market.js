@@ -164,9 +164,17 @@ export function getMarketState() {
         }
     }
 
-    // Asegurar diccionarios y fusionar valores por defecto reales
-    marketState.berryPrices = { ...DEFAULT_BERRY_PRICES, ...(marketState.berryPrices || {}) };
-    marketState.seedPrices = { ...DEFAULT_SEED_PRICES, ...(marketState.seedPrices || {}) };
+    // Migración automática única para sincronizar los precios reales del GTL capturados
+    const CURRENT_MARKET_VERSION = '2026_09_07_live_gtl_v4';
+    if (!marketState.version || marketState.version !== CURRENT_MARKET_VERSION) {
+        marketState.berryPrices = { ...DEFAULT_BERRY_PRICES };
+        marketState.seedPrices = { ...DEFAULT_SEED_PRICES };
+        marketState.version = CURRENT_MARKET_VERSION;
+        saveMarketState();
+    } else {
+        marketState.berryPrices = { ...DEFAULT_BERRY_PRICES, ...(marketState.berryPrices || {}) };
+        marketState.seedPrices = { ...DEFAULT_SEED_PRICES, ...(marketState.seedPrices || {}) };
+    }
     
     if (!marketState.berry) marketState.berry = 'cheri';
     if (!marketState.plots) marketState.plots = 72;
