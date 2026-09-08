@@ -8,8 +8,10 @@ export function getBerryName(type) {
     if (typeof RECIPES !== 'undefined' && RECIPES[type]) {
         return getRecipeName(type);
     }
-    const dbInfo = BERRY_DB[type] || BERRY_DB.zanama;
+    const dbInfo = (typeof BERRY_DB !== 'undefined' && BERRY_DB[type]) ? BERRY_DB[type] : null;
+    if (!dbInfo) return type;
     if (typeof currentLang !== 'undefined' && currentLang === 'en') {
+        if (dbInfo.nameEn) return dbInfo.nameEn;
         const names = {
             zanama: 'Leppa Berry',
             basicas: 'Basic Berries (Oran, Cheri...)',
@@ -24,7 +26,10 @@ export function getBerryName(type) {
 }
 
 export function getRecipeName(key) {
+    const r = (typeof RECIPES !== 'undefined' && RECIPES[key]) ? RECIPES[key] : (typeof BERRY_DB !== 'undefined' ? BERRY_DB[key] : null);
+    if (!r) return key;
     if (typeof currentLang !== 'undefined' && currentLang === 'en') {
+        if (r.nameEn) return r.nameEn;
         const enNames = {
             leppa: 'Leppa Berry',
             lum: 'Lum Berry',
@@ -39,32 +44,246 @@ export function getRecipeName(key) {
             cheri: 'Cheri Berry',
             chesto: 'Chesto Berry',
             rawst: 'Rawst Berry',
-            aspear: 'Aspear Berry'
+            aspear: 'Aspear Berry',
+            oran: 'Oran Berry',
+            persim: 'Persim Berry'
         };
         if (enNames[key]) return enNames[key];
     }
-    return RECIPES[key]?.name || key;
+    return r.name || key;
 }
 
 export const BERRY_DB = {
+    // --- POPULARES / MÁS LUCRATIVAS ---
     zanama: { 
         name: 'Zanama (Leppa)', 
         totalHours: 20, 
         stageHours: 5.0,
-        dropDurationHours: 2.35,   // En PokéMMO 5 gotas duran ~11.75h (1 gota cada 2h 21m)
-        initialDryHours: 4.7,      // Las 2 gotas base duran ~4.7h
-        fullMoistureHours: 11.75,  // Las 5 gotas llenas duran ~11.75h antes de secarse
+        dropDurationHours: 2.35,
+        initialDryHours: 4.7,
+        fullMoistureHours: 11.75,
         yield: '5-7 bayas',
         effect: 'Restaura 10 PP',
         sprite: 'leppa-berry'
     },
+    leppa: { 
+        name: 'Zanama (Leppa)', 
+        totalHours: 20, 
+        stageHours: 5.0,
+        dropDurationHours: 2.35,
+        initialDryHours: 4.7,
+        fullMoistureHours: 11.75,
+        yield: '5-7 bayas',
+        effect: 'Restaura 10 PP',
+        sprite: 'leppa-berry'
+    },
+    lum: { 
+        name: 'Ziuela (Lum)', 
+        totalHours: 44, 
+        stageHours: 11.0,
+        dropDurationHours: 3.5,
+        initialDryHours: 7.0,
+        fullMoistureHours: 17.5,
+        yield: '7-10 bayas',
+        effect: 'Cura cualquier problema de estado',
+        sprite: 'lum-berry'
+    },
+    sitrus: { 
+        name: 'Zidra (Sitrus)', 
+        totalHours: 44, 
+        stageHours: 11.0,
+        dropDurationHours: 3.5,
+        initialDryHours: 7.0,
+        fullMoistureHours: 17.5,
+        yield: '7-10 bayas',
+        effect: 'Restaura 25% PS',
+        sprite: 'sitrus-berry'
+    },
+
+    // --- BÁSICAS / ESTADOS (16 Horas) ---
+    chesto: { 
+        name: 'Atania (Chesto)', 
+        totalHours: 16, 
+        stageHours: 4.0,
+        dropDurationHours: 2.35,
+        initialDryHours: 4.7,
+        fullMoistureHours: 11.75,
+        yield: '3-6 bayas',
+        effect: 'Cura el Sueño',
+        sprite: 'chesto-berry'
+    },
+    cheri: { 
+        name: 'Zreza (Cheri)', 
+        totalHours: 16, 
+        stageHours: 4.0,
+        dropDurationHours: 2.35,
+        initialDryHours: 4.7,
+        fullMoistureHours: 11.75,
+        yield: '3-6 bayas',
+        effect: 'Cura la Parálisis',
+        sprite: 'cheri-berry'
+    },
+    pecha: { 
+        name: 'Meloc (Pecha)', 
+        totalHours: 16, 
+        stageHours: 4.0,
+        dropDurationHours: 2.35,
+        initialDryHours: 4.7,
+        fullMoistureHours: 11.75,
+        yield: '3-6 bayas',
+        effect: 'Cura el Envenenamiento',
+        sprite: 'pecha-berry'
+    },
+    rawst: { 
+        name: 'Safre (Rawst)', 
+        totalHours: 16, 
+        stageHours: 4.0,
+        dropDurationHours: 2.35,
+        initialDryHours: 4.7,
+        fullMoistureHours: 11.75,
+        yield: '3-6 bayas',
+        effect: 'Cura la Quemadura',
+        sprite: 'rawst-berry'
+    },
+    aspear: { 
+        name: 'Perasi (Aspear)', 
+        totalHours: 16, 
+        stageHours: 4.0,
+        dropDurationHours: 2.35,
+        initialDryHours: 4.7,
+        fullMoistureHours: 11.75,
+        yield: '3-6 bayas',
+        effect: 'Cura la Congelación',
+        sprite: 'aspear-berry'
+    },
+    oran: { 
+        name: 'Aranja (Oran)', 
+        totalHours: 16, 
+        stageHours: 4.0,
+        dropDurationHours: 2.35,
+        initialDryHours: 4.7,
+        fullMoistureHours: 11.75,
+        yield: '3-6 bayas',
+        effect: 'Restaura 10 PS',
+        sprite: 'oran-berry'
+    },
+    persim: { 
+        name: 'Caqui (Persim)', 
+        totalHours: 16, 
+        stageHours: 4.0,
+        dropDurationHours: 2.35,
+        initialDryHours: 4.7,
+        fullMoistureHours: 11.75,
+        yield: '3-6 bayas',
+        effect: 'Cura la Confusión',
+        sprite: 'persim-berry'
+    },
+
+    // --- REDUCTORAS DE EVS (44 Horas) ---
+    pomeg: { 
+        name: 'Grana (Pomeg)', 
+        totalHours: 44, 
+        stageHours: 11.0,
+        dropDurationHours: 3.5,
+        initialDryHours: 7.0,
+        fullMoistureHours: 17.5,
+        yield: '7-9 bayas',
+        effect: '-10 EVs PS + Felicidad',
+        sprite: 'pomeg-berry'
+    },
+    kelpsy: { 
+        name: 'Algama (Kelpsy)', 
+        totalHours: 44, 
+        stageHours: 11.0,
+        dropDurationHours: 3.5,
+        initialDryHours: 7.0,
+        fullMoistureHours: 17.5,
+        yield: '7-9 bayas',
+        effect: '-10 EVs Ataque + Felicidad',
+        sprite: 'kelpsy-berry'
+    },
+    qualot: { 
+        name: 'Ispero (Qualot)', 
+        totalHours: 44, 
+        stageHours: 11.0,
+        dropDurationHours: 3.5,
+        initialDryHours: 7.0,
+        fullMoistureHours: 17.5,
+        yield: '7-9 bayas',
+        effect: '-10 EVs Defensa + Felicidad',
+        sprite: 'qualot-berry'
+    },
+    hondew: { 
+        name: 'Meluce (Hondew)', 
+        totalHours: 44, 
+        stageHours: 11.0,
+        dropDurationHours: 3.5,
+        initialDryHours: 7.0,
+        fullMoistureHours: 17.5,
+        yield: '7-9 bayas',
+        effect: '-10 EVs Atq. Esp. + Felicidad',
+        sprite: 'hondew-berry'
+    },
+    grepa: { 
+        name: 'Uva (Grepa)', 
+        totalHours: 44, 
+        stageHours: 11.0,
+        dropDurationHours: 3.5,
+        initialDryHours: 7.0,
+        fullMoistureHours: 17.5,
+        yield: '7-9 bayas',
+        effect: '-10 EVs Def. Esp. + Felicidad',
+        sprite: 'grepa-berry'
+    },
+    tamato: { 
+        name: 'Tamate (Tamato)', 
+        totalHours: 44, 
+        stageHours: 11.0,
+        dropDurationHours: 3.5,
+        initialDryHours: 7.0,
+        fullMoistureHours: 17.5,
+        yield: '7-9 bayas',
+        effect: '-10 EVs Velocidad + Felicidad',
+        sprite: 'tamato-berry'
+    },
+
+    // --- RESISTENCIAS A TIPOS (42 Horas) ---
+    occa: { name: 'Occa (Fuego)', totalHours: 42, stageHours: 10.5, dropDurationHours: 3.35, initialDryHours: 6.7, fullMoistureHours: 16.75, yield: '7-9 bayas', effect: 'Debilita daño supereficaz de Fuego', sprite: 'occa-berry' },
+    passho: { name: 'Pasio (Passho - Agua)', totalHours: 42, stageHours: 10.5, dropDurationHours: 3.35, initialDryHours: 6.7, fullMoistureHours: 16.75, yield: '7-9 bayas', effect: 'Debilita daño supereficaz de Agua', sprite: 'passho-berry' },
+    wacan: { name: 'Gualot (Wacan - Eléctrico)', totalHours: 42, stageHours: 10.5, dropDurationHours: 3.35, initialDryHours: 6.7, fullMoistureHours: 16.75, yield: '7-9 bayas', effect: 'Debilita daño supereficaz de Eléctrico', sprite: 'wacan-berry' },
+    rindo: { name: 'Rindo (Planta)', totalHours: 42, stageHours: 10.5, dropDurationHours: 3.35, initialDryHours: 6.7, fullMoistureHours: 16.75, yield: '7-9 bayas', effect: 'Debilita daño supereficaz de Planta', sprite: 'rindo-berry' },
+    yache: { name: 'Yache (Hielo)', totalHours: 42, stageHours: 10.5, dropDurationHours: 3.35, initialDryHours: 6.7, fullMoistureHours: 16.75, yield: '7-9 bayas', effect: 'Debilita daño supereficaz de Hielo', sprite: 'yache-berry' },
+    chople: { name: 'Chople (Lucha)', totalHours: 42, stageHours: 10.5, dropDurationHours: 3.35, initialDryHours: 6.7, fullMoistureHours: 16.75, yield: '7-9 bayas', effect: 'Debilita daño supereficaz de Lucha', sprite: 'chople-berry' },
+    kebia: { name: 'Kebia (Veneno)', totalHours: 42, stageHours: 10.5, dropDurationHours: 3.35, initialDryHours: 6.7, fullMoistureHours: 16.75, yield: '7-9 bayas', effect: 'Debilita daño supereficaz de Veneno', sprite: 'kebia-berry' },
+    shuca: { name: 'Shuca (Tierra)', totalHours: 42, stageHours: 10.5, dropDurationHours: 3.35, initialDryHours: 6.7, fullMoistureHours: 16.75, yield: '7-9 bayas', effect: 'Debilita daño supereficaz de Tierra', sprite: 'shuca-berry' },
+    coba: { name: 'Coba (Volador)', totalHours: 42, stageHours: 10.5, dropDurationHours: 3.35, initialDryHours: 6.7, fullMoistureHours: 16.75, yield: '7-9 bayas', effect: 'Debilita daño supereficaz de Volador', sprite: 'coba-berry' },
+    payapa: { name: 'Payapa (Psíquico)', totalHours: 42, stageHours: 10.5, dropDurationHours: 3.35, initialDryHours: 6.7, fullMoistureHours: 16.75, yield: '7-9 bayas', effect: 'Debilita daño supereficaz de Psíquico', sprite: 'payapa-berry' },
+    tanga: { name: 'Tanga (Bicho)', totalHours: 42, stageHours: 10.5, dropDurationHours: 3.35, initialDryHours: 6.7, fullMoistureHours: 16.75, yield: '7-9 bayas', effect: 'Debilita daño supereficaz de Bicho', sprite: 'tanga-berry' },
+    charti: { name: 'Cardo (Charti - Roca)', totalHours: 42, stageHours: 10.5, dropDurationHours: 3.35, initialDryHours: 6.7, fullMoistureHours: 16.75, yield: '7-9 bayas', effect: 'Debilita daño supereficaz de Roca', sprite: 'charti-berry' },
+    kasib: { name: 'Kasib (Fantasma)', totalHours: 42, stageHours: 10.5, dropDurationHours: 3.35, initialDryHours: 6.7, fullMoistureHours: 16.75, yield: '7-9 bayas', effect: 'Debilita daño supereficaz de Fantasma', sprite: 'kasib-berry' },
+    haban: { name: 'Haban (Dragón)', totalHours: 42, stageHours: 10.5, dropDurationHours: 3.35, initialDryHours: 6.7, fullMoistureHours: 16.75, yield: '7-9 bayas', effect: 'Debilita daño supereficaz de Dragón', sprite: 'haban-berry' },
+    colbur: { name: 'Colbur (Siniestro)', totalHours: 42, stageHours: 10.5, dropDurationHours: 3.35, initialDryHours: 6.7, fullMoistureHours: 16.75, yield: '7-9 bayas', effect: 'Debilita daño supereficaz de Siniestro', sprite: 'colbur-berry' },
+    babiri: { name: 'Babiri (Acero)', totalHours: 42, stageHours: 10.5, dropDurationHours: 3.35, initialDryHours: 6.7, fullMoistureHours: 16.75, yield: '7-9 bayas', effect: 'Debilita daño supereficaz de Acero', sprite: 'babiri-berry' },
+    chilan: { name: 'Chilan (Normal)', totalHours: 42, stageHours: 10.5, dropDurationHours: 3.35, initialDryHours: 6.7, fullMoistureHours: 16.75, yield: '7-9 bayas', effect: 'Debilita daño de ataques Normales', sprite: 'chilan-berry' },
+    roseli: { name: 'Roseli (Hada)', totalHours: 42, stageHours: 10.5, dropDurationHours: 3.35, initialDryHours: 6.7, fullMoistureHours: 16.75, yield: '7-9 bayas', effect: 'Debilita daño supereficaz de Hada', sprite: 'roseli-berry' },
+
+    // --- ESTADÍSTICAS / RARAS / PINCH (67 Horas) ---
+    liechi: { name: 'Lichi (Liechi - +Atq)', totalHours: 67, stageHours: 16.75, dropDurationHours: 4.5, initialDryHours: 9.0, fullMoistureHours: 22.5, yield: '10-13 bayas', effect: 'Sube Ataque con PS < 25%', sprite: 'liechi-berry' },
+    ganlon: { name: 'Gonlon (Ganlon - +Def)', totalHours: 67, stageHours: 16.75, dropDurationHours: 4.5, initialDryHours: 9.0, fullMoistureHours: 22.5, yield: '10-13 bayas', effect: 'Sube Defensa con PS < 25%', sprite: 'ganlon-berry' },
+    salac: { name: 'Aserrín (Salac - +Vel)', totalHours: 67, stageHours: 16.75, dropDurationHours: 4.5, initialDryHours: 9.0, fullMoistureHours: 22.5, yield: '10-13 bayas', effect: 'Sube Velocidad con PS < 25%', sprite: 'salac-berry' },
+    petaya: { name: 'Petaya (+Atq. Esp.)', totalHours: 67, stageHours: 16.75, dropDurationHours: 4.5, initialDryHours: 9.0, fullMoistureHours: 22.5, yield: '10-13 bayas', effect: 'Sube Atq. Esp. con PS < 25%', sprite: 'petaya-berry' },
+    apicot: { name: 'Apicot (+Def. Esp.)', totalHours: 67, stageHours: 16.75, dropDurationHours: 4.5, initialDryHours: 9.0, fullMoistureHours: 22.5, yield: '10-13 bayas', effect: 'Sube Def. Esp. con PS < 25%', sprite: 'apicot-berry' },
+    lansat: { name: 'Lansat (+Crítico)', totalHours: 67, stageHours: 16.75, dropDurationHours: 4.5, initialDryHours: 9.0, fullMoistureHours: 22.5, yield: '10-13 bayas', effect: 'Sube probabilidad de Golpe Crítico', sprite: 'lansat-berry' },
+    starf: { name: 'Zarfa (Starf - +Stat x2)', totalHours: 67, stageHours: 16.75, dropDurationHours: 4.5, initialDryHours: 9.0, fullMoistureHours: 22.5, yield: '10-13 bayas', effect: 'Sube 2 niveles una estadística al azar', sprite: 'starf-berry' },
+
+    // --- COMPATIBILIDAD CON CATEGORÍAS GENERALES HISTÓRICAS ---
     basicas: { 
         name: 'Básicas (Oran, Cheri, Pecha...)', 
         totalHours: 16, 
         stageHours: 4.0,
-        dropDurationHours: 2.35,   // En PokéMMO las bayas básicas consumen 1 gota cada ~2.35h (las 2 iniciales duran ~4.7h y las 5 duran ~11.75h)
-        initialDryHours: 4.7,      // Las 2 gotas base duran ~4.7h
-        fullMoistureHours: 11.75,  // Las 5 gotas duran ~11.75h
+        dropDurationHours: 2.35,
+        initialDryHours: 4.7,
+        fullMoistureHours: 11.75,
         yield: '3-6 bayas',
         effect: 'Cura Estados / 10 HP',
         sprite: 'cheri-berry'
@@ -73,9 +292,9 @@ export const BERRY_DB = {
         name: 'Ziuela (Lum) / Zidra (Sitrus)', 
         totalHours: 44, 
         stageHours: 11.0,
-        dropDurationHours: 3.5,    // 5 gotas duran ~17.5h
-        initialDryHours: 7.0,      // Las 2 gotas base duran 7.0h
-        fullMoistureHours: 17.5,   // Las 5 gotas duran 17.5h
+        dropDurationHours: 3.5,
+        initialDryHours: 7.0,
+        fullMoistureHours: 17.5,
         yield: '7-10 bayas',
         effect: 'Cura todos los estados / 25% PS',
         sprite: 'sitrus-berry'
@@ -84,9 +303,9 @@ export const BERRY_DB = {
         name: 'Reductoras EVs (Grana, Algama...)', 
         totalHours: 44, 
         stageHours: 11.0,
-        dropDurationHours: 3.5,    // 5 gotas duran ~17.5h
-        initialDryHours: 7.0,      // Las 2 gotas base duran 7.0h
-        fullMoistureHours: 17.5,   // Las 5 gotas duran 17.5h
+        dropDurationHours: 3.5,
+        initialDryHours: 7.0,
+        fullMoistureHours: 17.5,
         yield: '7-9 bayas',
         effect: '-10 EVs en Stat + Felicidad',
         sprite: 'pomeg-berry'
@@ -95,9 +314,9 @@ export const BERRY_DB = {
         name: 'Resistencias Tipo (Occa, Yache...)', 
         totalHours: 42, 
         stageHours: 10.5,
-        dropDurationHours: 3.35,   // 5 gotas duran ~16.75h
-        initialDryHours: 6.7,      // Las 2 gotas base duran 6.7h
-        fullMoistureHours: 16.75,  // Las 5 gotas duran 16.75h
+        dropDurationHours: 3.35,
+        initialDryHours: 6.7,
+        fullMoistureHours: 16.75,
         yield: '7-9 bayas',
         effect: 'Debilita ataques supereficaces',
         sprite: 'yache-berry'
@@ -106,9 +325,9 @@ export const BERRY_DB = {
         name: 'Estadísticas / Raras (Liechi, Salac...)', 
         totalHours: 67, 
         stageHours: 16.75,
-        dropDurationHours: 4.5,    // 5 gotas duran ~22.5h
-        initialDryHours: 9.0,      // Las 2 gotas base duran 9.0h
-        fullMoistureHours: 22.5,   // Las 5 gotas duran 22.5h
+        dropDurationHours: 4.5,
+        initialDryHours: 9.0,
+        fullMoistureHours: 22.5,
         yield: '10-13 bayas',
         effect: 'Sube Stat con PS < 25%',
         sprite: 'salac-berry'
@@ -116,56 +335,384 @@ export const BERRY_DB = {
 };
 
 export const RECIPES = {
-    leppa: { name: 'Zanama (Leppa)', reqs: [
-        { id: 'v_picante', qty: 1, name: 'Semilla Muy Picante', color: 'bg-red-500' },
-        { id: 'dulce', qty: 1, name: 'Semilla Dulce', color: 'bg-pink-400' },
-        { id: 'amarga', qty: 1, name: 'Semilla Amarga', color: 'bg-green-500' }
-    ]},
-    lum: { name: 'Ziuela (Lum)', reqs: [
-        { id: 'v_seca', qty: 1, name: 'Semilla Muy Seca', color: 'bg-blue-500' },
-        { id: 'v_picante', qty: 1, name: 'Semilla Muy Picante', color: 'bg-red-500' },
-        { id: 'v_dulce', qty: 1, name: 'Semilla Muy Dulce', color: 'bg-pink-500' }
-    ]},
-    sitrus: { name: 'Zidra (Sitrus)', reqs: [
-        { id: 'v_dulce', qty: 1, name: 'Semilla Muy Dulce', color: 'bg-pink-500' },
-        { id: 'v_amarga', qty: 1, name: 'Semilla Muy Amarga', color: 'bg-green-600' },
-        { id: 'v_acida', qty: 1, name: 'Semilla Muy Ácida', color: 'bg-yellow-500' }
-    ]},
-    pomeg: { name: 'Grana (Pomeg)', reqs: [
-        { id: 'v_picante', qty: 1, name: 'Semilla Muy Picante', color: 'bg-red-500' },
-        { id: 'picante', qty: 1, name: 'Semilla Picante', color: 'bg-red-400' },
-        { id: 'amarga', qty: 1, name: 'Semilla Amarga', color: 'bg-green-500' }
-    ]},
-    kelpsy: { name: 'Algama (Kelpsy)', reqs: [
-        { id: 'v_seca', qty: 1, name: 'Semilla Muy Seca', color: 'bg-blue-500' },
-        { id: 'seca', qty: 1, name: 'Semilla Seca', color: 'bg-blue-400' },
-        { id: 'acida', qty: 1, name: 'Semilla Ácida', color: 'bg-yellow-400' }
-    ]},
-    qualot: { name: 'Ispero (Qualot)', reqs: [
-        { id: 'v_dulce', qty: 1, name: 'Semilla Muy Dulce', color: 'bg-pink-500' },
-        { id: 'dulce', qty: 1, name: 'Semilla Dulce', color: 'bg-pink-400' },
-        { id: 'picante', qty: 1, name: 'Semilla Picante', color: 'bg-red-400' }
-    ]},
-    hondew: { name: 'Meluce (Hondew)', reqs: [
-        { id: 'v_amarga', qty: 1, name: 'Semilla Muy Amarga', color: 'bg-green-600' },
-        { id: 'amarga', qty: 1, name: 'Semilla Amarga', color: 'bg-green-500' },
-        { id: 'seca', qty: 1, name: 'Semilla Seca', color: 'bg-blue-400' }
-    ]},
-    grepa: { name: 'Uva (Grepa)', reqs: [
-        { id: 'v_acida', qty: 1, name: 'Semilla Muy Ácida', color: 'bg-yellow-500' },
-        { id: 'acida', qty: 1, name: 'Semilla Ácida', color: 'bg-yellow-400' },
-        { id: 'dulce', qty: 1, name: 'Semilla Dulce', color: 'bg-pink-400' }
-    ]},
-    tamato: { name: 'Tamate (Tamato)', reqs: [
-        { id: 'v_picante', qty: 1, name: 'Semilla Muy Picante', color: 'bg-red-500' },
-        { id: 'picante', qty: 1, name: 'Semilla Picante', color: 'bg-red-400' },
-        { id: 'seca', qty: 1, name: 'Semilla Seca', color: 'bg-blue-400' }
-    ]},
-    pecha: { name: 'Meloc (Pecha)', reqs: [{ id: 'dulce', qty: 3, name: 'Semilla Dulce', color: 'bg-pink-400' }]},
-    cheri: { name: 'Zreza (Cheri)', reqs: [{ id: 'picante', qty: 3, name: 'Semilla Picante', color: 'bg-red-400' }]},
-    chesto: { name: 'Atania (Chesto)', reqs: [{ id: 'seca', qty: 3, name: 'Semilla Seca', color: 'bg-blue-400' }]},
-    rawst: { name: 'Safre (Rawst)', reqs: [{ id: 'amarga', qty: 3, name: 'Semilla Amarga', color: 'bg-green-500' }]},
-    aspear: { name: 'Perasi (Aspear)', reqs: [{ id: 'acida', qty: 3, name: 'Semilla Ácida', color: 'bg-yellow-400' }]}
+    // --- POPULARES ---
+    leppa: { 
+        name: 'Zanama (Leppa)', 
+        nameEn: 'Leppa Berry',
+        hours: 20,
+        effect: 'Restaura 10 PP',
+        sprite: 'leppa-berry',
+        recipes: [
+            { name: '1x Muy Picante + 1x Dulce + 1x Amarga (Estándar)', nameEn: '1x Very Spicy + 1x Sweet + 1x Bitter', reqs: [
+                { id: 'v_picante', qty: 1, name: 'Semilla Muy Picante', color: 'bg-red-500' },
+                { id: 'dulce', qty: 1, name: 'Semilla Dulce', color: 'bg-pink-400' },
+                { id: 'amarga', qty: 1, name: 'Semilla Amarga', color: 'bg-green-500' }
+            ]},
+            { name: '1x Muy Dulce + 1x Picante + 1x Amarga', nameEn: '1x Very Sweet + 1x Spicy + 1x Bitter', reqs: [
+                { id: 'v_dulce', qty: 1, name: 'Semilla Muy Dulce', color: 'bg-pink-500' },
+                { id: 'picante', qty: 1, name: 'Semilla Picante', color: 'bg-red-400' },
+                { id: 'amarga', qty: 1, name: 'Semilla Amarga', color: 'bg-green-500' }
+            ]},
+            { name: '1x Muy Amarga + 1x Picante + 1x Dulce', nameEn: '1x Very Bitter + 1x Spicy + 1x Sweet', reqs: [
+                { id: 'v_amarga', qty: 1, name: 'Semilla Muy Amarga', color: 'bg-green-600' },
+                { id: 'picante', qty: 1, name: 'Semilla Picante', color: 'bg-red-400' },
+                { id: 'dulce', qty: 1, name: 'Semilla Dulce', color: 'bg-pink-400' }
+            ]}
+        ],
+        reqs: [
+            { id: 'v_picante', qty: 1, name: 'Semilla Muy Picante', color: 'bg-red-500' },
+            { id: 'dulce', qty: 1, name: 'Semilla Dulce', color: 'bg-pink-400' },
+            { id: 'amarga', qty: 1, name: 'Semilla Amarga', color: 'bg-green-500' }
+        ]
+    },
+    lum: { 
+        name: 'Ziuela (Lum)', 
+        nameEn: 'Lum Berry',
+        hours: 44,
+        effect: 'Cura todos los estados',
+        sprite: 'lum-berry',
+        recipes: [
+            { name: '1x Muy Seca + 1x Muy Picante + 1x Muy Dulce', nameEn: '1x Very Dry + 1x Very Spicy + 1x Very Sweet', reqs: [
+                { id: 'v_seca', qty: 1, name: 'Semilla Muy Seca', color: 'bg-blue-500' },
+                { id: 'v_picante', qty: 1, name: 'Semilla Muy Picante', color: 'bg-red-500' },
+                { id: 'v_dulce', qty: 1, name: 'Semilla Muy Dulce', color: 'bg-pink-500' }
+            ]}
+        ],
+        reqs: [
+            { id: 'v_seca', qty: 1, name: 'Semilla Muy Seca', color: 'bg-blue-500' },
+            { id: 'v_picante', qty: 1, name: 'Semilla Muy Picante', color: 'bg-red-500' },
+            { id: 'v_dulce', qty: 1, name: 'Semilla Muy Dulce', color: 'bg-pink-500' }
+        ]
+    },
+    sitrus: { 
+        name: 'Zidra (Sitrus)', 
+        nameEn: 'Sitrus Berry',
+        hours: 44,
+        effect: 'Restaura 25% PS',
+        sprite: 'sitrus-berry',
+        recipes: [
+            { name: '1x Muy Dulce + 1x Muy Amarga + 1x Muy Ácida', nameEn: '1x Very Sweet + 1x Very Bitter + 1x Very Sour', reqs: [
+                { id: 'v_dulce', qty: 1, name: 'Semilla Muy Dulce', color: 'bg-pink-500' },
+                { id: 'v_amarga', qty: 1, name: 'Semilla Muy Amarga', color: 'bg-green-600' },
+                { id: 'v_acida', qty: 1, name: 'Semilla Muy Ácida', color: 'bg-yellow-500' }
+            ]}
+        ],
+        reqs: [
+            { id: 'v_dulce', qty: 1, name: 'Semilla Muy Dulce', color: 'bg-pink-500' },
+            { id: 'v_amarga', qty: 1, name: 'Semilla Muy Amarga', color: 'bg-green-600' },
+            { id: 'v_acida', qty: 1, name: 'Semilla Muy Ácida', color: 'bg-yellow-500' }
+        ]
+    },
+
+    // --- BÁSICAS / ESTADOS (16h) ---
+    chesto: { 
+        name: 'Atania (Chesto)', 
+        nameEn: 'Chesto Berry',
+        hours: 16,
+        effect: 'Cura el Sueño',
+        sprite: 'chesto-berry',
+        recipes: [
+            { name: 'Receta Estándar: 3x Semilla Seca', nameEn: 'Standard: 3x Plain Dry Seed', reqs: [
+                { id: 'seca', qty: 3, name: 'Semilla Seca', color: 'bg-blue-400' }
+            ]},
+            { name: 'Receta Concentrada: 1x Muy Seca + 1x Seca', nameEn: 'Concentrated: 1x Very Dry + 1x Plain Dry', reqs: [
+                { id: 'v_seca', qty: 1, name: 'Semilla Muy Seca', color: 'bg-blue-500' },
+                { id: 'seca', qty: 1, name: 'Semilla Seca', color: 'bg-blue-400' }
+            ]}
+        ],
+        reqs: [{ id: 'seca', qty: 3, name: 'Semilla Seca', color: 'bg-blue-400' }]
+    },
+    cheri: { 
+        name: 'Zreza (Cheri)', 
+        nameEn: 'Cheri Berry',
+        hours: 16,
+        effect: 'Cura la Parálisis',
+        sprite: 'cheri-berry',
+        recipes: [
+            { name: 'Receta Estándar: 3x Semilla Picante', nameEn: 'Standard: 3x Plain Spicy Seed', reqs: [
+                { id: 'picante', qty: 3, name: 'Semilla Picante', color: 'bg-red-400' }
+            ]},
+            { name: 'Receta Concentrada: 1x Muy Picante + 1x Picante', nameEn: 'Concentrated: 1x Very Spicy + 1x Plain Spicy', reqs: [
+                { id: 'v_picante', qty: 1, name: 'Semilla Muy Picante', color: 'bg-red-500' },
+                { id: 'picante', qty: 1, name: 'Semilla Picante', color: 'bg-red-400' }
+            ]}
+        ],
+        reqs: [{ id: 'picante', qty: 3, name: 'Semilla Picante', color: 'bg-red-400' }]
+    },
+    pecha: { 
+        name: 'Meloc (Pecha)', 
+        nameEn: 'Pecha Berry',
+        hours: 16,
+        effect: 'Cura el Envenenamiento',
+        sprite: 'pecha-berry',
+        recipes: [
+            { name: 'Receta Estándar: 3x Semilla Dulce', nameEn: 'Standard: 3x Plain Sweet Seed', reqs: [
+                { id: 'dulce', qty: 3, name: 'Semilla Dulce', color: 'bg-pink-400' }
+            ]},
+            { name: 'Receta Concentrada: 1x Muy Dulce + 1x Dulce', nameEn: 'Concentrated: 1x Very Sweet + 1x Plain Sweet', reqs: [
+                { id: 'v_dulce', qty: 1, name: 'Semilla Muy Dulce', color: 'bg-pink-500' },
+                { id: 'dulce', qty: 1, name: 'Semilla Dulce', color: 'bg-pink-400' }
+            ]}
+        ],
+        reqs: [{ id: 'dulce', qty: 3, name: 'Semilla Dulce', color: 'bg-pink-400' }]
+    },
+    rawst: { 
+        name: 'Safre (Rawst)', 
+        nameEn: 'Rawst Berry',
+        hours: 16,
+        effect: 'Cura la Quemadura',
+        sprite: 'rawst-berry',
+        recipes: [
+            { name: 'Receta Estándar: 3x Semilla Amarga', nameEn: 'Standard: 3x Plain Bitter Seed', reqs: [
+                { id: 'amarga', qty: 3, name: 'Semilla Amarga', color: 'bg-green-500' }
+            ]},
+            { name: 'Receta Concentrada: 1x Muy Amarga + 1x Amarga', nameEn: 'Concentrated: 1x Very Bitter + 1x Plain Bitter', reqs: [
+                { id: 'v_amarga', qty: 1, name: 'Semilla Muy Amarga', color: 'bg-green-600' },
+                { id: 'amarga', qty: 1, name: 'Semilla Amarga', color: 'bg-green-500' }
+            ]}
+        ],
+        reqs: [{ id: 'amarga', qty: 3, name: 'Semilla Amarga', color: 'bg-green-500' }]
+    },
+    aspear: { 
+        name: 'Perasi (Aspear)', 
+        nameEn: 'Aspear Berry',
+        hours: 16,
+        effect: 'Cura la Congelación',
+        sprite: 'aspear-berry',
+        recipes: [
+            { name: 'Receta Estándar: 3x Semilla Ácida', nameEn: 'Standard: 3x Plain Sour Seed', reqs: [
+                { id: 'acida', qty: 3, name: 'Semilla Ácida', color: 'bg-yellow-400' }
+            ]},
+            { name: 'Receta Concentrada: 1x Muy Ácida + 1x Ácida', nameEn: 'Concentrated: 1x Very Sour + 1x Plain Sour', reqs: [
+                { id: 'v_acida', qty: 1, name: 'Semilla Muy Ácida', color: 'bg-yellow-500' },
+                { id: 'acida', qty: 1, name: 'Semilla Ácida', color: 'bg-yellow-400' }
+            ]}
+        ],
+        reqs: [{ id: 'acida', qty: 3, name: 'Semilla Ácida', color: 'bg-yellow-400' }]
+    },
+    oran: { 
+        name: 'Aranja (Oran)', 
+        nameEn: 'Oran Berry',
+        hours: 16,
+        effect: 'Restaura 10 PS',
+        sprite: 'oran-berry',
+        recipes: [
+            { name: '1x Picante + 1x Dulce + 1x Amarga', nameEn: '1x Plain Spicy + 1x Sweet + 1x Bitter', reqs: [
+                { id: 'picante', qty: 1, name: 'Semilla Picante', color: 'bg-red-400' },
+                { id: 'dulce', qty: 1, name: 'Semilla Dulce', color: 'bg-pink-400' },
+                { id: 'amarga', qty: 1, name: 'Semilla Amarga', color: 'bg-green-500' }
+            ]},
+            { name: '1x Seca + 1x Dulce + 1x Ácida', nameEn: '1x Plain Dry + 1x Sweet + 1x Sour', reqs: [
+                { id: 'seca', qty: 1, name: 'Semilla Seca', color: 'bg-blue-400' },
+                { id: 'dulce', qty: 1, name: 'Semilla Dulce', color: 'bg-pink-400' },
+                { id: 'acida', qty: 1, name: 'Semilla Ácida', color: 'bg-yellow-400' }
+            ]}
+        ],
+        reqs: [
+            { id: 'picante', qty: 1, name: 'Semilla Picante', color: 'bg-red-400' },
+            { id: 'dulce', qty: 1, name: 'Semilla Dulce', color: 'bg-pink-400' },
+            { id: 'amarga', qty: 1, name: 'Semilla Amarga', color: 'bg-green-500' }
+        ]
+    },
+    persim: { 
+        name: 'Caqui (Persim)', 
+        nameEn: 'Persim Berry',
+        hours: 16,
+        effect: 'Cura la Confusión',
+        sprite: 'persim-berry',
+        recipes: [
+            { name: '1x Picante + 1x Dulce + 1x Ácida', nameEn: '1x Plain Spicy + 1x Sweet + 1x Sour', reqs: [
+                { id: 'picante', qty: 1, name: 'Semilla Picante', color: 'bg-red-400' },
+                { id: 'dulce', qty: 1, name: 'Semilla Dulce', color: 'bg-pink-400' },
+                { id: 'acida', qty: 1, name: 'Semilla Ácida', color: 'bg-yellow-400' }
+            ]},
+            { name: '1x Seca + 1x Amarga + 1x Dulce', nameEn: '1x Plain Dry + 1x Bitter + 1x Sweet', reqs: [
+                { id: 'seca', qty: 1, name: 'Semilla Seca', color: 'bg-blue-400' },
+                { id: 'amarga', qty: 1, name: 'Semilla Amarga', color: 'bg-green-500' },
+                { id: 'dulce', qty: 1, name: 'Semilla Dulce', color: 'bg-pink-400' }
+            ]}
+        ],
+        reqs: [
+            { id: 'picante', qty: 1, name: 'Semilla Picante', color: 'bg-red-400' },
+            { id: 'dulce', qty: 1, name: 'Semilla Dulce', color: 'bg-pink-400' },
+            { id: 'acida', qty: 1, name: 'Semilla Ácida', color: 'bg-yellow-400' }
+        ]
+    },
+
+    // --- REDUCTORAS DE EVS (44h) ---
+    pomeg: { 
+        name: 'Grana (Pomeg)', 
+        nameEn: 'Pomeg Berry',
+        hours: 44,
+        effect: '-10 EVs PS + Felicidad',
+        sprite: 'pomeg-berry',
+        recipes: [
+            { name: '1x Muy Picante + 1x Picante + 1x Amarga', nameEn: '1x Very Spicy + 1x Spicy + 1x Bitter', reqs: [
+                { id: 'v_picante', qty: 1, name: 'Semilla Muy Picante', color: 'bg-red-500' },
+                { id: 'picante', qty: 1, name: 'Semilla Picante', color: 'bg-red-400' },
+                { id: 'amarga', qty: 1, name: 'Semilla Amarga', color: 'bg-green-500' }
+            ]},
+            { name: '1x Muy Amarga + 1x Amarga + 1x Picante', nameEn: '1x Very Bitter + 1x Bitter + 1x Spicy', reqs: [
+                { id: 'v_amarga', qty: 1, name: 'Semilla Muy Amarga', color: 'bg-green-600' },
+                { id: 'amarga', qty: 1, name: 'Semilla Amarga', color: 'bg-green-500' },
+                { id: 'picante', qty: 1, name: 'Semilla Picante', color: 'bg-red-400' }
+            ]}
+        ],
+        reqs: [
+            { id: 'v_picante', qty: 1, name: 'Semilla Muy Picante', color: 'bg-red-500' },
+            { id: 'picante', qty: 1, name: 'Semilla Picante', color: 'bg-red-400' },
+            { id: 'amarga', qty: 1, name: 'Semilla Amarga', color: 'bg-green-500' }
+        ]
+    },
+    kelpsy: { 
+        name: 'Algama (Kelpsy)', 
+        nameEn: 'Kelpsy Berry',
+        hours: 44,
+        effect: '-10 EVs Ataque + Felicidad',
+        sprite: 'kelpsy-berry',
+        recipes: [
+            { name: '1x Muy Seca + 1x Seca + 1x Ácida', nameEn: '1x Very Dry + 1x Dry + 1x Sour', reqs: [
+                { id: 'v_seca', qty: 1, name: 'Semilla Muy Seca', color: 'bg-blue-500' },
+                { id: 'seca', qty: 1, name: 'Semilla Seca', color: 'bg-blue-400' },
+                { id: 'acida', qty: 1, name: 'Semilla Ácida', color: 'bg-yellow-400' }
+            ]},
+            { name: '1x Muy Ácida + 1x Ácida + 1x Seca', nameEn: '1x Very Sour + 1x Sour + 1x Dry', reqs: [
+                { id: 'v_acida', qty: 1, name: 'Semilla Muy Ácida', color: 'bg-yellow-500' },
+                { id: 'acida', qty: 1, name: 'Semilla Ácida', color: 'bg-yellow-400' },
+                { id: 'seca', qty: 1, name: 'Semilla Seca', color: 'bg-blue-400' }
+            ]}
+        ],
+        reqs: [
+            { id: 'v_seca', qty: 1, name: 'Semilla Muy Seca', color: 'bg-blue-500' },
+            { id: 'seca', qty: 1, name: 'Semilla Seca', color: 'bg-blue-400' },
+            { id: 'acida', qty: 1, name: 'Semilla Ácida', color: 'bg-yellow-400' }
+        ]
+    },
+    qualot: { 
+        name: 'Ispero (Qualot)', 
+        nameEn: 'Qualot Berry',
+        hours: 44,
+        effect: '-10 EVs Defensa + Felicidad',
+        sprite: 'qualot-berry',
+        recipes: [
+            { name: '1x Muy Dulce + 1x Dulce + 1x Picante', nameEn: '1x Very Sweet + 1x Sweet + 1x Spicy', reqs: [
+                { id: 'v_dulce', qty: 1, name: 'Semilla Muy Dulce', color: 'bg-pink-500' },
+                { id: 'dulce', qty: 1, name: 'Semilla Dulce', color: 'bg-pink-400' },
+                { id: 'picante', qty: 1, name: 'Semilla Picante', color: 'bg-red-400' }
+            ]},
+            { name: '1x Muy Picante + 1x Picante + 1x Dulce', nameEn: '1x Very Spicy + 1x Spicy + 1x Sweet', reqs: [
+                { id: 'v_picante', qty: 1, name: 'Semilla Muy Picante', color: 'bg-red-500' },
+                { id: 'picante', qty: 1, name: 'Semilla Picante', color: 'bg-red-400' },
+                { id: 'dulce', qty: 1, name: 'Semilla Dulce', color: 'bg-pink-400' }
+            ]}
+        ],
+        reqs: [
+            { id: 'v_dulce', qty: 1, name: 'Semilla Muy Dulce', color: 'bg-pink-500' },
+            { id: 'dulce', qty: 1, name: 'Semilla Dulce', color: 'bg-pink-400' },
+            { id: 'picante', qty: 1, name: 'Semilla Picante', color: 'bg-red-400' }
+        ]
+    },
+    hondew: { 
+        name: 'Meluce (Hondew)', 
+        nameEn: 'Hondew Berry',
+        hours: 44,
+        effect: '-10 EVs Atq. Esp. + Felicidad',
+        sprite: 'hondew-berry',
+        recipes: [
+            { name: '1x Muy Amarga + 1x Amarga + 1x Seca', nameEn: '1x Very Bitter + 1x Bitter + 1x Dry', reqs: [
+                { id: 'v_amarga', qty: 1, name: 'Semilla Muy Amarga', color: 'bg-green-600' },
+                { id: 'amarga', qty: 1, name: 'Semilla Amarga', color: 'bg-green-500' },
+                { id: 'seca', qty: 1, name: 'Semilla Seca', color: 'bg-blue-400' }
+            ]},
+            { name: '1x Muy Seca + 1x Seca + 1x Amarga', nameEn: '1x Very Dry + 1x Dry + 1x Bitter', reqs: [
+                { id: 'v_seca', qty: 1, name: 'Semilla Muy Seca', color: 'bg-blue-500' },
+                { id: 'seca', qty: 1, name: 'Semilla Seca', color: 'bg-blue-400' },
+                { id: 'amarga', qty: 1, name: 'Semilla Amarga', color: 'bg-green-500' }
+            ]}
+        ],
+        reqs: [
+            { id: 'v_amarga', qty: 1, name: 'Semilla Muy Amarga', color: 'bg-green-600' },
+            { id: 'amarga', qty: 1, name: 'Semilla Amarga', color: 'bg-green-500' },
+            { id: 'seca', qty: 1, name: 'Semilla Seca', color: 'bg-blue-400' }
+        ]
+    },
+    grepa: { 
+        name: 'Uva (Grepa)', 
+        nameEn: 'Grepa Berry',
+        hours: 44,
+        effect: '-10 EVs Def. Esp. + Felicidad',
+        sprite: 'grepa-berry',
+        recipes: [
+            { name: '1x Muy Ácida + 1x Ácida + 1x Dulce', nameEn: '1x Very Sour + 1x Sour + 1x Sweet', reqs: [
+                { id: 'v_acida', qty: 1, name: 'Semilla Muy Ácida', color: 'bg-yellow-500' },
+                { id: 'acida', qty: 1, name: 'Semilla Ácida', color: 'bg-yellow-400' },
+                { id: 'dulce', qty: 1, name: 'Semilla Dulce', color: 'bg-pink-400' }
+            ]},
+            { name: '1x Muy Dulce + 1x Dulce + 1x Ácida', nameEn: '1x Very Sweet + 1x Sweet + 1x Sour', reqs: [
+                { id: 'v_dulce', qty: 1, name: 'Semilla Muy Dulce', color: 'bg-pink-500' },
+                { id: 'dulce', qty: 1, name: 'Semilla Dulce', color: 'bg-pink-400' },
+                { id: 'acida', qty: 1, name: 'Semilla Ácida', color: 'bg-yellow-400' }
+            ]}
+        ],
+        reqs: [
+            { id: 'v_acida', qty: 1, name: 'Semilla Muy Ácida', color: 'bg-yellow-500' },
+            { id: 'acida', qty: 1, name: 'Semilla Ácida', color: 'bg-yellow-400' },
+            { id: 'dulce', qty: 1, name: 'Semilla Dulce', color: 'bg-pink-400' }
+        ]
+    },
+    tamato: { 
+        name: 'Tamate (Tamato)', 
+        nameEn: 'Tamato Berry',
+        hours: 44,
+        effect: '-10 EVs Velocidad + Felicidad',
+        sprite: 'tamato-berry',
+        recipes: [
+            { name: '1x Muy Picante + 1x Picante + 1x Seca', nameEn: '1x Very Spicy + 1x Spicy + 1x Dry', reqs: [
+                { id: 'v_picante', qty: 1, name: 'Semilla Muy Picante', color: 'bg-red-500' },
+                { id: 'picante', qty: 1, name: 'Semilla Picante', color: 'bg-red-400' },
+                { id: 'seca', qty: 1, name: 'Semilla Seca', color: 'bg-blue-400' }
+            ]},
+            { name: '1x Muy Seca + 1x Seca + 1x Picante', nameEn: '1x Very Dry + 1x Dry + 1x Spicy', reqs: [
+                { id: 'v_seca', qty: 1, name: 'Semilla Muy Seca', color: 'bg-blue-500' },
+                { id: 'seca', qty: 1, name: 'Semilla Seca', color: 'bg-blue-400' },
+                { id: 'picante', qty: 1, name: 'Semilla Picante', color: 'bg-red-400' }
+            ]}
+        ],
+        reqs: [
+            { id: 'v_picante', qty: 1, name: 'Semilla Muy Picante', color: 'bg-red-500' },
+            { id: 'picante', qty: 1, name: 'Semilla Picante', color: 'bg-red-400' },
+            { id: 'seca', qty: 1, name: 'Semilla Seca', color: 'bg-blue-400' }
+        ]
+    },
+
+    // --- RESISTENCIAS A TIPOS (42h) ---
+    occa: { name: 'Occa (Fuego)', nameEn: 'Occa Berry', hours: 42, effect: 'Debilita daño de Fuego', sprite: 'occa-berry', recipes: [{ name: '1x Muy Picante + 1x Picante + 1x Dulce', reqs: [{ id: 'v_picante', qty: 1, name: 'Semilla Muy Picante', color: 'bg-red-500' }, { id: 'picante', qty: 1, name: 'Semilla Picante', color: 'bg-red-400' }, { id: 'dulce', qty: 1, name: 'Semilla Dulce', color: 'bg-pink-400' }] }], reqs: [{ id: 'v_picante', qty: 1, name: 'Semilla Muy Picante', color: 'bg-red-500' }, { id: 'picante', qty: 1, name: 'Semilla Picante', color: 'bg-red-400' }, { id: 'dulce', qty: 1, name: 'Semilla Dulce', color: 'bg-pink-400' }] },
+    passho: { name: 'Pasio (Passho - Agua)', nameEn: 'Passho Berry', hours: 42, effect: 'Debilita daño de Agua', sprite: 'passho-berry', recipes: [{ name: '1x Muy Seca + 1x Seca + 1x Amarga', reqs: [{ id: 'v_seca', qty: 1, name: 'Semilla Muy Seca', color: 'bg-blue-500' }, { id: 'seca', qty: 1, name: 'Semilla Seca', color: 'bg-blue-400' }, { id: 'amarga', qty: 1, name: 'Semilla Amarga', color: 'bg-green-500' }] }], reqs: [{ id: 'v_seca', qty: 1, name: 'Semilla Muy Seca', color: 'bg-blue-500' }, { id: 'seca', qty: 1, name: 'Semilla Seca', color: 'bg-blue-400' }, { id: 'amarga', qty: 1, name: 'Semilla Amarga', color: 'bg-green-500' }] },
+    wacan: { name: 'Gualot (Wacan - Eléctrico)', nameEn: 'Wacan Berry', hours: 42, effect: 'Debilita daño de Eléctrico', sprite: 'wacan-berry', recipes: [{ name: '1x Muy Dulce + 1x Dulce + 1x Ácida', reqs: [{ id: 'v_dulce', qty: 1, name: 'Semilla Muy Dulce', color: 'bg-pink-500' }, { id: 'dulce', qty: 1, name: 'Semilla Dulce', color: 'bg-pink-400' }, { id: 'acida', qty: 1, name: 'Semilla Ácida', color: 'bg-yellow-400' }] }], reqs: [{ id: 'v_dulce', qty: 1, name: 'Semilla Muy Dulce', color: 'bg-pink-500' }, { id: 'dulce', qty: 1, name: 'Semilla Dulce', color: 'bg-pink-400' }, { id: 'acida', qty: 1, name: 'Semilla Ácida', color: 'bg-yellow-400' }] },
+    rindo: { name: 'Rindo (Planta)', nameEn: 'Rindo Berry', hours: 42, effect: 'Debilita daño de Planta', sprite: 'rindo-berry', recipes: [{ name: '1x Muy Amarga + 1x Amarga + 1x Picante', reqs: [{ id: 'v_amarga', qty: 1, name: 'Semilla Muy Amarga', color: 'bg-green-600' }, { id: 'amarga', qty: 1, name: 'Semilla Amarga', color: 'bg-green-500' }, { id: 'picante', qty: 1, name: 'Semilla Picante', color: 'bg-red-400' }] }], reqs: [{ id: 'v_amarga', qty: 1, name: 'Semilla Muy Amarga', color: 'bg-green-600' }, { id: 'amarga', qty: 1, name: 'Semilla Amarga', color: 'bg-green-500' }, { id: 'picante', qty: 1, name: 'Semilla Picante', color: 'bg-red-400' }] },
+    yache: { name: 'Yache (Hielo)', nameEn: 'Yache Berry', hours: 42, effect: 'Debilita daño de Hielo', sprite: 'yache-berry', recipes: [{ name: '1x Muy Ácida + 1x Ácida + 1x Seca', reqs: [{ id: 'v_acida', qty: 1, name: 'Semilla Muy Ácida', color: 'bg-yellow-500' }, { id: 'acida', qty: 1, name: 'Semilla Ácida', color: 'bg-yellow-400' }, { id: 'seca', qty: 1, name: 'Semilla Seca', color: 'bg-blue-400' }] }], reqs: [{ id: 'v_acida', qty: 1, name: 'Semilla Muy Ácida', color: 'bg-yellow-500' }, { id: 'acida', qty: 1, name: 'Semilla Ácida', color: 'bg-yellow-400' }, { id: 'seca', qty: 1, name: 'Semilla Seca', color: 'bg-blue-400' }] },
+    chople: { name: 'Chople (Lucha)', nameEn: 'Chople Berry', hours: 42, effect: 'Debilita daño de Lucha', sprite: 'chople-berry', recipes: [{ name: '1x Muy Picante + 1x Picante + 1x Amarga', reqs: [{ id: 'v_picante', qty: 1, name: 'Semilla Muy Picante', color: 'bg-red-500' }, { id: 'picante', qty: 1, name: 'Semilla Picante', color: 'bg-red-400' }, { id: 'amarga', qty: 1, name: 'Semilla Amarga', color: 'bg-green-500' }] }], reqs: [{ id: 'v_picante', qty: 1, name: 'Semilla Muy Picante', color: 'bg-red-500' }, { id: 'picante', qty: 1, name: 'Semilla Picante', color: 'bg-red-400' }, { id: 'amarga', qty: 1, name: 'Semilla Amarga', color: 'bg-green-500' }] },
+    kebia: { name: 'Kebia (Veneno)', nameEn: 'Kebia Berry', hours: 42, effect: 'Debilita daño de Veneno', sprite: 'kebia-berry', recipes: [{ name: '1x Muy Seca + 1x Seca + 1x Ácida', reqs: [{ id: 'v_seca', qty: 1, name: 'Semilla Muy Seca', color: 'bg-blue-500' }, { id: 'seca', qty: 1, name: 'Semilla Seca', color: 'bg-blue-400' }, { id: 'acida', qty: 1, name: 'Semilla Ácida', color: 'bg-yellow-400' }] }], reqs: [{ id: 'v_seca', qty: 1, name: 'Semilla Muy Seca', color: 'bg-blue-500' }, { id: 'seca', qty: 1, name: 'Semilla Seca', color: 'bg-blue-400' }, { id: 'acida', qty: 1, name: 'Semilla Ácida', color: 'bg-yellow-400' }] },
+    shuca: { name: 'Shuca (Tierra)', nameEn: 'Shuca Berry', hours: 42, effect: 'Debilita daño de Tierra', sprite: 'shuca-berry', recipes: [{ name: '1x Muy Dulce + 1x Dulce + 1x Picante', reqs: [{ id: 'v_dulce', qty: 1, name: 'Semilla Muy Dulce', color: 'bg-pink-500' }, { id: 'dulce', qty: 1, name: 'Semilla Dulce', color: 'bg-pink-400' }, { id: 'picante', qty: 1, name: 'Semilla Picante', color: 'bg-red-400' }] }], reqs: [{ id: 'v_dulce', qty: 1, name: 'Semilla Muy Dulce', color: 'bg-pink-500' }, { id: 'dulce', qty: 1, name: 'Semilla Dulce', color: 'bg-pink-400' }, { id: 'picante', qty: 1, name: 'Semilla Picante', color: 'bg-red-400' }] },
+    coba: { name: 'Coba (Volador)', nameEn: 'Coba Berry', hours: 42, effect: 'Debilita daño de Volador', sprite: 'coba-berry', recipes: [{ name: '1x Muy Amarga + 1x Amarga + 1x Dulce', reqs: [{ id: 'v_amarga', qty: 1, name: 'Semilla Muy Amarga', color: 'bg-green-600' }, { id: 'amarga', qty: 1, name: 'Semilla Amarga', color: 'bg-green-500' }, { id: 'dulce', qty: 1, name: 'Semilla Dulce', color: 'bg-pink-400' }] }], reqs: [{ id: 'v_amarga', qty: 1, name: 'Semilla Muy Amarga', color: 'bg-green-600' }, { id: 'amarga', qty: 1, name: 'Semilla Amarga', color: 'bg-green-500' }, { id: 'dulce', qty: 1, name: 'Semilla Dulce', color: 'bg-pink-400' }] },
+    payapa: { name: 'Payapa (Psíquico)', nameEn: 'Payapa Berry', hours: 42, effect: 'Debilita daño de Psíquico', sprite: 'payapa-berry', recipes: [{ name: '1x Muy Ácida + 1x Ácida + 1x Picante', reqs: [{ id: 'v_acida', qty: 1, name: 'Semilla Muy Ácida', color: 'bg-yellow-500' }, { id: 'acida', qty: 1, name: 'Semilla Ácida', color: 'bg-yellow-400' }, { id: 'picante', qty: 1, name: 'Semilla Picante', color: 'bg-red-400' }] }], reqs: [{ id: 'v_acida', qty: 1, name: 'Semilla Muy Ácida', color: 'bg-yellow-500' }, { id: 'acida', qty: 1, name: 'Semilla Ácida', color: 'bg-yellow-400' }, { id: 'picante', qty: 1, name: 'Semilla Picante', color: 'bg-red-400' }] },
+    tanga: { name: 'Tanga (Bicho)', nameEn: 'Tanga Berry', hours: 42, effect: 'Debilita daño de Bicho', sprite: 'tanga-berry', recipes: [{ name: '1x Muy Picante + 1x Picante + 1x Seca', reqs: [{ id: 'v_picante', qty: 1, name: 'Semilla Muy Picante', color: 'bg-red-500' }, { id: 'picante', qty: 1, name: 'Semilla Picante', color: 'bg-red-400' }, { id: 'seca', qty: 1, name: 'Semilla Seca', color: 'bg-blue-400' }] }], reqs: [{ id: 'v_picante', qty: 1, name: 'Semilla Muy Picante', color: 'bg-red-500' }, { id: 'picante', qty: 1, name: 'Semilla Picante', color: 'bg-red-400' }, { id: 'seca', qty: 1, name: 'Semilla Seca', color: 'bg-blue-400' }] },
+    charti: { name: 'Cardo (Charti - Roca)', nameEn: 'Charti Berry', hours: 42, effect: 'Debilita daño de Roca', sprite: 'charti-berry', recipes: [{ name: '1x Muy Seca + 1x Seca + 1x Dulce', reqs: [{ id: 'v_seca', qty: 1, name: 'Semilla Muy Seca', color: 'bg-blue-500' }, { id: 'seca', qty: 1, name: 'Semilla Seca', color: 'bg-blue-400' }, { id: 'dulce', qty: 1, name: 'Semilla Dulce', color: 'bg-pink-400' }] }], reqs: [{ id: 'v_seca', qty: 1, name: 'Semilla Muy Seca', color: 'bg-blue-500' }, { id: 'seca', qty: 1, name: 'Semilla Seca', color: 'bg-blue-400' }, { id: 'dulce', qty: 1, name: 'Semilla Dulce', color: 'bg-pink-400' }] },
+    kasib: { name: 'Kasib (Fantasma)', nameEn: 'Kasib Berry', hours: 42, effect: 'Debilita daño de Fantasma', sprite: 'kasib-berry', recipes: [{ name: '1x Muy Dulce + 1x Dulce + 1x Amarga', reqs: [{ id: 'v_dulce', qty: 1, name: 'Semilla Muy Dulce', color: 'bg-pink-500' }, { id: 'dulce', qty: 1, name: 'Semilla Dulce', color: 'bg-pink-400' }, { id: 'amarga', qty: 1, name: 'Semilla Amarga', color: 'bg-green-500' }] }], reqs: [{ id: 'v_dulce', qty: 1, name: 'Semilla Muy Dulce', color: 'bg-pink-500' }, { id: 'dulce', qty: 1, name: 'Semilla Dulce', color: 'bg-pink-400' }, { id: 'amarga', qty: 1, name: 'Semilla Amarga', color: 'bg-green-500' }] },
+    haban: { name: 'Haban (Dragón)', nameEn: 'Haban Berry', hours: 42, effect: 'Debilita daño de Dragón', sprite: 'haban-berry', recipes: [{ name: '1x Muy Amarga + 1x Amarga + 1x Ácida', reqs: [{ id: 'v_amarga', qty: 1, name: 'Semilla Muy Amarga', color: 'bg-green-600' }, { id: 'amarga', qty: 1, name: 'Semilla Amarga', color: 'bg-green-500' }, { id: 'acida', qty: 1, name: 'Semilla Ácida', color: 'bg-yellow-400' }] }], reqs: [{ id: 'v_amarga', qty: 1, name: 'Semilla Muy Amarga', color: 'bg-green-600' }, { id: 'amarga', qty: 1, name: 'Semilla Amarga', color: 'bg-green-500' }, { id: 'acida', qty: 1, name: 'Semilla Ácida', color: 'bg-yellow-400' }] },
+    colbur: { name: 'Colbur (Siniestro)', nameEn: 'Colbur Berry', hours: 42, effect: 'Debilita daño de Siniestro', sprite: 'colbur-berry', recipes: [{ name: '1x Muy Ácida + 1x Ácida + 1x Amarga', reqs: [{ id: 'v_acida', qty: 1, name: 'Semilla Muy Ácida', color: 'bg-yellow-500' }, { id: 'acida', qty: 1, name: 'Semilla Ácida', color: 'bg-yellow-400' }, { id: 'amarga', qty: 1, name: 'Semilla Amarga', color: 'bg-green-500' }] }], reqs: [{ id: 'v_acida', qty: 1, name: 'Semilla Muy Ácida', color: 'bg-yellow-500' }, { id: 'acida', qty: 1, name: 'Semilla Ácida', color: 'bg-yellow-400' }, { id: 'amarga', qty: 1, name: 'Semilla Amarga', color: 'bg-green-500' }] },
+    babiri: { name: 'Babiri (Acero)', nameEn: 'Babiri Berry', hours: 42, effect: 'Debilita daño de Acero', sprite: 'babiri-berry', recipes: [{ name: '1x Muy Picante + 1x Picante + 1x Ácida', reqs: [{ id: 'v_picante', qty: 1, name: 'Semilla Muy Picante', color: 'bg-red-500' }, { id: 'picante', qty: 1, name: 'Semilla Picante', color: 'bg-red-400' }, { id: 'acida', qty: 1, name: 'Semilla Ácida', color: 'bg-yellow-400' }] }], reqs: [{ id: 'v_picante', qty: 1, name: 'Semilla Muy Picante', color: 'bg-red-500' }, { id: 'picante', qty: 1, name: 'Semilla Picante', color: 'bg-red-400' }, { id: 'acida', qty: 1, name: 'Semilla Ácida', color: 'bg-yellow-400' }] },
+    chilan: { name: 'Chilan (Normal)', nameEn: 'Chilan Berry', hours: 42, effect: 'Debilita daño de Normal', sprite: 'chilan-berry', recipes: [{ name: '1x Muy Seca + 1x Seca + 1x Picante', reqs: [{ id: 'v_seca', qty: 1, name: 'Semilla Muy Seca', color: 'bg-blue-500' }, { id: 'seca', qty: 1, name: 'Semilla Seca', color: 'bg-blue-400' }, { id: 'picante', qty: 1, name: 'Semilla Picante', color: 'bg-red-400' }] }], reqs: [{ id: 'v_seca', qty: 1, name: 'Semilla Muy Seca', color: 'bg-blue-500' }, { id: 'seca', qty: 1, name: 'Semilla Seca', color: 'bg-blue-400' }, { id: 'picante', qty: 1, name: 'Semilla Picante', color: 'bg-red-400' }] },
+    roseli: { name: 'Roseli (Hada)', nameEn: 'Roseli Berry', hours: 42, effect: 'Debilita daño de Hada', sprite: 'roseli-berry', recipes: [{ name: '1x Muy Dulce + 1x Dulce + 1x Seca', reqs: [{ id: 'v_dulce', qty: 1, name: 'Semilla Muy Dulce', color: 'bg-pink-500' }, { id: 'dulce', qty: 1, name: 'Semilla Dulce', color: 'bg-pink-400' }, { id: 'seca', qty: 1, name: 'Semilla Seca', color: 'bg-blue-400' }] }], reqs: [{ id: 'v_dulce', qty: 1, name: 'Semilla Muy Dulce', color: 'bg-pink-500' }, { id: 'dulce', qty: 1, name: 'Semilla Dulce', color: 'bg-pink-400' }, { id: 'seca', qty: 1, name: 'Semilla Seca', color: 'bg-blue-400' }] },
+
+    // --- ESTADÍSTICAS / RARAS / PINCH (67h) ---
+    liechi: { name: 'Lichi (Liechi - +Atq)', nameEn: 'Liechi Berry', hours: 67, effect: 'Sube Ataque en apuros (PS < 25%)', sprite: 'liechi-berry', recipes: [{ name: '1x Muy Picante + 1x Muy Dulce + 1x Muy Seca', reqs: [{ id: 'v_picante', qty: 1, name: 'Semilla Muy Picante', color: 'bg-red-500' }, { id: 'v_dulce', qty: 1, name: 'Semilla Muy Dulce', color: 'bg-pink-500' }, { id: 'v_seca', qty: 1, name: 'Semilla Muy Seca', color: 'bg-blue-500' }] }], reqs: [{ id: 'v_picante', qty: 1, name: 'Semilla Muy Picante', color: 'bg-red-500' }, { id: 'v_dulce', qty: 1, name: 'Semilla Muy Dulce', color: 'bg-pink-500' }, { id: 'v_seca', qty: 1, name: 'Semilla Muy Seca', color: 'bg-blue-500' }] },
+    ganlon: { name: 'Gonlon (Ganlon - +Def)', nameEn: 'Ganlon Berry', hours: 67, effect: 'Sube Defensa en apuros (PS < 25%)', sprite: 'ganlon-berry', recipes: [{ name: '1x Muy Seca + 1x Muy Amarga + 1x Muy Ácida', reqs: [{ id: 'v_seca', qty: 1, name: 'Semilla Muy Seca', color: 'bg-blue-500' }, { id: 'v_amarga', qty: 1, name: 'Semilla Muy Amarga', color: 'bg-green-600' }, { id: 'v_acida', qty: 1, name: 'Semilla Muy Ácida', color: 'bg-yellow-500' }] }], reqs: [{ id: 'v_seca', qty: 1, name: 'Semilla Muy Seca', color: 'bg-blue-500' }, { id: 'v_amarga', qty: 1, name: 'Semilla Muy Amarga', color: 'bg-green-600' }, { id: 'v_acida', qty: 1, name: 'Semilla Muy Ácida', color: 'bg-yellow-500' }] },
+    salac: { name: 'Aserrín (Salac - +Vel)', nameEn: 'Salac Berry', hours: 67, effect: 'Sube Velocidad en apuros (PS < 25%)', sprite: 'salac-berry', recipes: [{ name: '1x Muy Dulce + 1x Muy Amarga + 1x Muy Ácida', reqs: [{ id: 'v_dulce', qty: 1, name: 'Semilla Muy Dulce', color: 'bg-pink-500' }, { id: 'v_amarga', qty: 1, name: 'Semilla Muy Amarga', color: 'bg-green-600' }, { id: 'v_acida', qty: 1, name: 'Semilla Muy Ácida', color: 'bg-yellow-500' }] }], reqs: [{ id: 'v_dulce', qty: 1, name: 'Semilla Muy Dulce', color: 'bg-pink-500' }, { id: 'v_amarga', qty: 1, name: 'Semilla Muy Amarga', color: 'bg-green-600' }, { id: 'v_acida', qty: 1, name: 'Semilla Muy Ácida', color: 'bg-yellow-500' }] },
+    petaya: { name: 'Petaya (+Atq. Esp.)', nameEn: 'Petaya Berry', hours: 67, effect: 'Sube Atq. Esp. en apuros (PS < 25%)', sprite: 'petaya-berry', recipes: [{ name: '1x Muy Picante + 1x Muy Amarga + 1x Muy Ácida', reqs: [{ id: 'v_picante', qty: 1, name: 'Semilla Muy Picante', color: 'bg-red-500' }, { id: 'v_amarga', qty: 1, name: 'Semilla Muy Amarga', color: 'bg-green-600' }, { id: 'v_acida', qty: 1, name: 'Semilla Muy Ácida', color: 'bg-yellow-500' }] }], reqs: [{ id: 'v_picante', qty: 1, name: 'Semilla Muy Picante', color: 'bg-red-500' }, { id: 'v_amarga', qty: 1, name: 'Semilla Muy Amarga', color: 'bg-green-600' }, { id: 'v_acida', qty: 1, name: 'Semilla Muy Ácida', color: 'bg-yellow-500' }] },
+    apicot: { name: 'Apicot (+Def. Esp.)', nameEn: 'Apicot Berry', hours: 67, effect: 'Sube Def. Esp. en apuros (PS < 25%)', sprite: 'apicot-berry', recipes: [{ name: '1x Muy Seca + 1x Muy Dulce + 1x Muy Ácida', reqs: [{ id: 'v_seca', qty: 1, name: 'Semilla Muy Seca', color: 'bg-blue-500' }, { id: 'v_dulce', qty: 1, name: 'Semilla Muy Dulce', color: 'bg-pink-500' }, { id: 'v_acida', qty: 1, name: 'Semilla Muy Ácida', color: 'bg-yellow-500' }] }], reqs: [{ id: 'v_seca', qty: 1, name: 'Semilla Muy Seca', color: 'bg-blue-500' }, { id: 'v_dulce', qty: 1, name: 'Semilla Muy Dulce', color: 'bg-pink-500' }, { id: 'v_acida', qty: 1, name: 'Semilla Muy Ácida', color: 'bg-yellow-500' }] },
+    lansat: { name: 'Lansat (+Crítico)', nameEn: 'Lansat Berry', hours: 67, effect: 'Sube Golpe Crítico en apuros', sprite: 'lansat-berry', recipes: [{ name: '1x Muy Picante + 1x Muy Dulce + 1x Muy Amarga', reqs: [{ id: 'v_picante', qty: 1, name: 'Semilla Muy Picante', color: 'bg-red-500' }, { id: 'v_dulce', qty: 1, name: 'Semilla Muy Dulce', color: 'bg-pink-500' }, { id: 'v_amarga', qty: 1, name: 'Semilla Muy Amarga', color: 'bg-green-600' }] }], reqs: [{ id: 'v_picante', qty: 1, name: 'Semilla Muy Picante', color: 'bg-red-500' }, { id: 'v_dulce', qty: 1, name: 'Semilla Muy Dulce', color: 'bg-pink-500' }, { id: 'v_amarga', qty: 1, name: 'Semilla Muy Amarga', color: 'bg-green-600' }] },
+    starf: { name: 'Zarfa (Starf - +Stat x2)', nameEn: 'Starf Berry', hours: 67, effect: 'Sube 2 niveles un stat al azar', sprite: 'starf-berry', recipes: [{ name: '1x Muy Picante + 1x Muy Seca + 1x Muy Ácida', reqs: [{ id: 'v_picante', qty: 1, name: 'Semilla Muy Picante', color: 'bg-red-500' }, { id: 'v_seca', qty: 1, name: 'Semilla Muy Seca', color: 'bg-blue-500' }, { id: 'v_acida', qty: 1, name: 'Semilla Muy Ácida', color: 'bg-yellow-500' }] }], reqs: [{ id: 'v_picante', qty: 1, name: 'Semilla Muy Picante', color: 'bg-red-500' }, { id: 'v_seca', qty: 1, name: 'Semilla Muy Seca', color: 'bg-blue-500' }, { id: 'v_acida', qty: 1, name: 'Semilla Muy Ácida', color: 'bg-yellow-500' }] }
 };
 
 export const SEED_NAMES_EN = {
@@ -455,14 +1002,23 @@ export function renderBerryView() {
                     <!-- RECIPE LOOKUP -->
                     <section class="panel p-5 rounded-xl">
                         <h2 class="text-xs font-mono text-os-muted uppercase tracking-wider mb-4 font-semibold">${t('berry_recipes')}</h2>
-                        <select id="recipeSelect" class="w-full p-2.5 text-xs mb-4 cursor-pointer rounded-lg bg-os-bg border border-os-border text-os-text font-mono">
+                        <select id="recipeSelect" class="w-full p-2.5 text-xs mb-4 cursor-pointer rounded-lg bg-[#EDE8DC] dark:bg-[#20201C] border border-[#2B2B2B] dark:border-[#35352E] text-[#1C1C17] dark:text-[#F4F1E8] font-mono">
                             <option value="" disabled selected>${t('berry_consult')}</option>
-                            <optgroup label="${currentLang === 'en' ? 'Most Profitable' : 'Más Rentables'}">
-                                <option value="leppa">Zanama (Leppa) - Restaura PP</option>
-                                <option value="lum">Ziuela (Lum) - Cura todo</option>
-                                <option value="sitrus">Zidra (Sitrus) - Cura PS</option>
+                            <optgroup label="${currentLang === 'en' ? 'Most Popular / Lucrative' : 'Más Populares / Lucrativas'}">
+                                <option value="leppa">Zanama (Leppa) - Restaura PP (20h)</option>
+                                <option value="lum">Ziuela (Lum) - Cura todo (44h)</option>
+                                <option value="sitrus">Zidra (Sitrus) - Cura PS (44h)</option>
                             </optgroup>
-                            <optgroup label="Reductoras de EVs">
+                            <optgroup label="${currentLang === 'en' ? 'Basic Status Berries (16h)' : 'Básicas / Estados (16h)'}">
+                                <option value="chesto">Atania (Chesto) - Sueño</option>
+                                <option value="cheri">Zreza (Cheri) - Parálisis</option>
+                                <option value="pecha">Meloc (Pecha) - Veneno</option>
+                                <option value="rawst">Safre (Rawst) - Quemadura</option>
+                                <option value="aspear">Perasi (Aspear) - Congelación</option>
+                                <option value="oran">Aranja (Oran) - 10 PS</option>
+                                <option value="persim">Caqui (Persim) - Confusión</option>
+                            </optgroup>
+                            <optgroup label="${currentLang === 'en' ? 'EV-Reducing Berries (44h)' : 'Reductoras de EVs (44h)'}">
                                 <option value="pomeg">Grana (Pomeg) - Baja HP</option>
                                 <option value="kelpsy">Algama (Kelpsy) - Baja Atq</option>
                                 <option value="qualot">Ispero (Qualot) - Baja Def</option>
@@ -470,32 +1026,106 @@ export function renderBerryView() {
                                 <option value="grepa">Uva (Grepa) - Baja DefEsp</option>
                                 <option value="tamato">Tamate (Tamato) - Baja Vel</option>
                             </optgroup>
-                            <optgroup label="${currentLang === 'en' ? 'Basic Status Berries' : 'Básicas (Estados)'}">
-                                <option value="cheri">Zreza (Cheri) - Parálisis</option>
-                                <option value="chesto">Atania (Chesto) - Sueño</option>
-                                <option value="pecha">Meloc (Pecha) - Veneno</option>
-                                <option value="rawst">Safre (Rawst) - Quemadura</option>
-                                <option value="aspear">Perasi (Aspear) - Congelación</option>
+                            <optgroup label="${currentLang === 'en' ? 'Type Resist Berries (42h)' : 'Resistencias a Tipos (42h)'}">
+                                <option value="occa">Occa (Fuego)</option>
+                                <option value="passho">Pasio / Passho (Agua)</option>
+                                <option value="wacan">Gualot / Wacan (Eléctrico)</option>
+                                <option value="rindo">Rindo (Planta)</option>
+                                <option value="yache">Yache (Hielo)</option>
+                                <option value="chople">Chople (Lucha)</option>
+                                <option value="kebia">Kebia (Veneno)</option>
+                                <option value="shuca">Shuca (Tierra)</option>
+                                <option value="coba">Coba (Volador)</option>
+                                <option value="payapa">Payapa (Psíquico)</option>
+                                <option value="tanga">Tanga (Bicho)</option>
+                                <option value="charti">Cardo / Charti (Roca)</option>
+                                <option value="kasib">Kasib (Fantasma)</option>
+                                <option value="haban">Haban (Dragón)</option>
+                                <option value="colbur">Colbur (Siniestro)</option>
+                                <option value="babiri">Babiri (Acero)</option>
+                                <option value="chilan">Chilan (Normal)</option>
+                                <option value="roseli">Roseli (Hada)</option>
+                            </optgroup>
+                            <optgroup label="${currentLang === 'en' ? 'Pinnacle / Stat Berries (67h)' : 'Estadísticas / Raras (67h)'}">
+                                <option value="liechi">Lichi / Liechi (+Atq)</option>
+                                <option value="ganlon">Gonlon / Ganlon (+Def)</option>
+                                <option value="salac">Aserrín / Salac (+Vel)</option>
+                                <option value="petaya">Petaya (+Atq. Esp.)</option>
+                                <option value="apicot">Apicot (+Def. Esp.)</option>
+                                <option value="lansat">Lansat (+Crítico)</option>
+                                <option value="starf">Zarfa / Starf (+Stat x2)</option>
                             </optgroup>
                         </select>
-                        <div id="recipeResult" class="bg-os-bg border border-os-border p-3 text-xs font-mono text-os-muted min-h-[80px] flex items-center justify-center rounded-lg">
-                            ${currentLang === 'en' ? 'Select a berry to view required seeds' : 'Selecciona una baya para ver sus semillas requeridas'}
+                        <div id="recipeResult" class="bg-[#EDE8DC]/50 dark:bg-[#1E1E1A] border border-[#2B2B2B]/30 dark:border-[#35352E] p-3 text-xs font-mono text-os-muted min-h-[80px] flex items-center justify-center rounded-lg">
+                            ${currentLang === 'en' ? 'Select a berry to view required seeds' : 'Selecciona una baya para ver sus recetas de crafteo'}
                         </div>
                     </section>
 
                     <!-- PLANT BERRY -->
-                    <section class="panel p-4 sm:p-5 rounded-xl">
+                    <section class="panel p-4 sm:p-5 rounded-xl border-2 border-[#2B2B2B] dark:border-[#35352E] bg-[#FAF8F2] dark:bg-[#242420]">
                         <h2 class="text-xs font-tech text-os-muted uppercase tracking-wider mb-4 font-bold">Plantación de Bayas</h2>
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
                             <div>
                                 <label class="block text-[13px] uppercase text-os-muted mb-1 font-mono">Especie</label>
-                                <select id="berryType" class="w-full p-2.5 text-sm cursor-pointer min-h-[44px]">
-                                    <option value="zanama" selected>Zanama (Leppa) / 20h (PP)</option>
-                                    <option value="basicas">Básicas (Oran, Cheri...) / 16h</option>
-                                    <option value="curativas">Ziuela (Lum) / Zidra (Sitrus) / 44h</option>
-                                    <option value="ev">Reductoras EVs (Grana, Algama...) / 44h</option>
-                                    <option value="resistencias">Resistencias Tipo (Occa, Yache...) / 42h</option>
-                                    <option value="raras">Estadísticas / Raras (Liechi, Salac...) / 67h</option>
+                                <select id="berryType" class="w-full p-2.5 text-xs font-mono cursor-pointer min-h-[44px] rounded-lg bg-[#EDE8DC] dark:bg-[#20201C] border border-[#2B2B2B] dark:border-[#35352E] text-[#1C1C17] dark:text-[#F4F1E8]">
+                                    <optgroup label="${currentLang === 'en' ? 'Most Popular' : 'Más Populares'}">
+                                        <option value="zanama" selected>Zanama (Leppa) / 20h (PP)</option>
+                                        <option value="lum">Ziuela (Lum) / 44h (Cura todo)</option>
+                                        <option value="sitrus">Zidra (Sitrus) / 44h (Cura PS)</option>
+                                    </optgroup>
+                                    <optgroup label="${currentLang === 'en' ? 'Basic Status Berries (16h)' : 'Básicas / Estados (16h)'}">
+                                        <option value="chesto">Atania (Chesto) / 16h (Sueño)</option>
+                                        <option value="cheri">Zreza (Cheri) / 16h (Parálisis)</option>
+                                        <option value="pecha">Meloc (Pecha) / 16h (Veneno)</option>
+                                        <option value="rawst">Safre (Rawst) / 16h (Quemadura)</option>
+                                        <option value="aspear">Perasi (Aspear) / 16h (Congelación)</option>
+                                        <option value="oran">Aranja (Oran) / 16h (10 PS)</option>
+                                        <option value="persim">Caqui (Persim) / 16h (Confusión)</option>
+                                    </optgroup>
+                                    <optgroup label="${currentLang === 'en' ? 'EV-Reducing Berries (44h)' : 'Reductoras de EVs (44h)'}">
+                                        <option value="pomeg">Grana (Pomeg) / 44h (HP)</option>
+                                        <option value="kelpsy">Algama (Kelpsy) / 44h (Ataque)</option>
+                                        <option value="qualot">Ispero (Qualot) / 44h (Defensa)</option>
+                                        <option value="hondew">Meluce (Hondew) / 44h (Atq. Esp.)</option>
+                                        <option value="grepa">Uva (Grepa) / 44h (Def. Esp.)</option>
+                                        <option value="tamato">Tamate (Tamato) / 44h (Velocidad)</option>
+                                    </optgroup>
+                                    <optgroup label="${currentLang === 'en' ? 'Type Resist (42h)' : 'Resistencias a Tipos (42h)'}">
+                                        <option value="occa">Occa / 42h (Fuego)</option>
+                                        <option value="passho">Pasio / 42h (Agua)</option>
+                                        <option value="wacan">Gualot / 42h (Eléctrico)</option>
+                                        <option value="rindo">Rindo / 42h (Planta)</option>
+                                        <option value="yache">Yache / 42h (Hielo)</option>
+                                        <option value="chople">Chople / 42h (Lucha)</option>
+                                        <option value="kebia">Kebia / 42h (Veneno)</option>
+                                        <option value="shuca">Shuca / 42h (Tierra)</option>
+                                        <option value="coba">Coba / 42h (Volador)</option>
+                                        <option value="payapa">Payapa / 42h (Psíquico)</option>
+                                        <option value="tanga">Tanga / 42h (Bicho)</option>
+                                        <option value="charti">Cardo / 42h (Roca)</option>
+                                        <option value="kasib">Kasib / 42h (Fantasma)</option>
+                                        <option value="haban">Haban / 42h (Dragón)</option>
+                                        <option value="colbur">Colbur / 42h (Siniestro)</option>
+                                        <option value="babiri">Babiri / 42h (Acero)</option>
+                                        <option value="chilan">Chilan / 42h (Normal)</option>
+                                        <option value="roseli">Roseli / 42h (Hada)</option>
+                                    </optgroup>
+                                    <optgroup label="${currentLang === 'en' ? 'Stat / Pinnacle (67h)' : 'Estadísticas / Raras (67h)'}">
+                                        <option value="liechi">Lichi / 67h (+Atq)</option>
+                                        <option value="ganlon">Gonlon / 67h (+Def)</option>
+                                        <option value="salac">Aserrín / 67h (+Vel)</option>
+                                        <option value="petaya">Petaya / 67h (+AtqEsp)</option>
+                                        <option value="apicot">Apicot / 67h (+DefEsp)</option>
+                                        <option value="lansat">Lansat / 67h (+Crítico)</option>
+                                        <option value="starf">Zarfa / 67h (+Stat x2)</option>
+                                    </optgroup>
+                                    <optgroup label="${currentLang === 'en' ? 'Generic Categories' : 'Categorías Genéricas'}">
+                                        <option value="basicas">Básicas (Oran, Cheri...) / 16h</option>
+                                        <option value="curativas">Curativas (Lum, Sitrus) / 44h</option>
+                                        <option value="ev">Reductoras EVs / 44h</option>
+                                        <option value="resistencias">Resistencias / 42h</option>
+                                        <option value="raras">Raras / 67h</option>
+                                    </optgroup>
                                 </select>
                             </div>
                             <div>
@@ -1339,88 +1969,165 @@ function saveCropsToLocal() {
 }
 
 export function showRecipe() {
-    const key = document.getElementById('recipeSelect').value;
+    const key = document.getElementById('recipeSelect')?.value;
     const res = document.getElementById('recipeResult');
-    if (!key || !RECIPES[key]) return;
+    if (!key || !res) return;
     
-    const reqs = RECIPES[key].reqs;
-    let html = `<div class="w-full"><div class="text-sm text-gray-300 mb-3 border-b border-gray-700 pb-2">${currentLang === 'en' ? 'Plant exactly these seeds in a single plot:' : 'Debes plantar exactamente estas semillas en un solo hueco:'}</div><div class="flex flex-col gap-2">`;
-    
-    reqs.forEach(r => {
-        html += `
-            <div class="flex items-center gap-3 bg-gray-800 p-2 rounded border border-gray-700">
-                <span class="w-4 h-4 rounded-full ${r.color} shadow-sm border border-gray-900"></span>
-                <span class="font-bold text-gray-200">${r.qty}x</span>
-                <span class="text-gray-300">${typeof getSeedName === 'function' ? getSeedName(r.id) : r.name}</span>
+    const berryInfo = RECIPES[key] || BERRY_DB[key];
+    if (!berryInfo) return;
+
+    const berryName = (typeof getBerryName === 'function' ? getBerryName(key) : berryInfo.name);
+    const sprite = berryInfo.sprite || 'poke-ball';
+    const hours = berryInfo.hours || berryInfo.totalHours || 16;
+    const effect = berryInfo.effect || '';
+
+    const recipesList = (RECIPES[key]?.recipes && RECIPES[key].recipes.length > 0) 
+        ? RECIPES[key].recipes 
+        : (RECIPES[key]?.reqs ? [{ name: currentLang === 'en' ? 'Standard Recipe' : 'Receta Estándar', reqs: RECIPES[key].reqs }] : []);
+
+    let html = `
+        <div class="w-full space-y-3">
+            <!-- Cabecera de la baya consultada -->
+            <div class="flex items-center justify-between border-b border-[#2B2B2B]/20 dark:border-[#35352E] pb-2">
+                <div class="flex items-center gap-2.5">
+                    <div class="w-8 h-8 rounded bg-[#FAF8F2] dark:bg-[#1E1E1A] border border-[#2B2B2B]/30 dark:border-[#33332D] flex items-center justify-center p-0.5">
+                        <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/${sprite}.png" class="w-7 h-7 pokemon-sprite" onerror="this.src='https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/poke-ball.png'" alt="${berryName}">
+                    </div>
+                    <div>
+                        <h4 class="font-tech font-bold text-sm text-[#1C1C17] dark:text-[#F4F1E8] uppercase leading-tight">${berryName}</h4>
+                        <p class="font-mono text-[11px] text-[#5F5A4D] dark:text-[#A8A594]">${effect}</p>
+                    </div>
+                </div>
+                <div class="text-right">
+                    <span class="inline-block text-[11px] font-mono font-bold px-2 py-0.5 rounded bg-[#EDE8DC] dark:bg-[#20201C] border border-[#2B2B2B]/30 dark:border-[#35352E] text-[#2563EB] dark:text-[#60A5FA]">
+                        ${hours}h Crecimiento
+                    </span>
+                </div>
             </div>
-        `;
-    });
-    
-    html += '</div></div>';
+
+            <!-- Listado de Recetas / Formas de Crafteo -->
+            <div class="space-y-2">
+    `;
+
+    if (recipesList.length === 0) {
+        html += `<div class="text-center text-xs text-os-muted py-2">${currentLang === 'en' ? 'No craft recipe on record' : 'Sin receta de crafteo registrada'}</div>`;
+    } else {
+        recipesList.forEach((rOption, idx) => {
+            const optName = (currentLang === 'en' && rOption.nameEn) ? rOption.nameEn : rOption.name;
+            html += `
+                <div class="p-2.5 rounded-lg bg-[#FAF8F2] dark:bg-[#1E1E1A] border border-[#2B2B2B]/20 dark:border-[#35352E]">
+                    <div class="flex items-center justify-between text-[11px] font-mono font-bold uppercase text-[#5F5A4D] dark:text-[#A8A594] mb-1.5">
+                        <span>${recipesList.length > 1 ? `Opción ${idx + 1}: ${optName}` : optName}</span>
+                        <span class="text-[10px] text-[#D97706] dark:text-[#F59E0B]">1 Parcela</span>
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-${Math.min(rOption.reqs.length, 3)} gap-2">
+            `;
+
+            rOption.reqs.forEach(req => {
+                const seedName = (typeof getSeedName === 'function' ? getSeedName(req.id) : (SEED_NAMES[req.id] || req.name));
+                const color = SEED_COLORS[req.id] || 'text-[#1C1C17]';
+                html += `
+                    <div class="flex items-center gap-2 bg-[#EDE8DC] dark:bg-[#252520] p-1.5 rounded border border-[#2B2B2B]/20 dark:border-[#33332D]">
+                        <span class="w-2.5 h-2.5 rounded-full ${req.color || 'bg-os-blue'} shadow-sm flex-shrink-0"></span>
+                        <span class="font-bold font-mono text-xs text-[#1C1C17] dark:text-[#F4F1E8]">${req.qty}x</span>
+                        <span class="text-[11px] font-mono truncate ${color}" title="${seedName}">${seedName.replace('Semilla ', '').replace('Plain ', '').replace(' Seed', '')}</span>
+                    </div>
+                `;
+            });
+
+            html += `
+                    </div>
+                </div>
+            `;
+        });
+    }
+
+    html += `
+            </div>
+        </div>
+    `;
     res.innerHTML = html;
 }
 
 export function calculateInventory() {
     const inv = {
-        picante: parseInt(document.getElementById('inv_picante').value) || 0,
-        dulce: parseInt(document.getElementById('inv_dulce').value) || 0,
-        seca: parseInt(document.getElementById('inv_seca').value) || 0,
-        amarga: parseInt(document.getElementById('inv_amarga').value) || 0,
-        acida: parseInt(document.getElementById('inv_acida').value) || 0,
-        v_picante: parseInt(document.getElementById('inv_v_picante').value) || 0,
-        v_dulce: parseInt(document.getElementById('inv_v_dulce').value) || 0,
-        v_seca: parseInt(document.getElementById('inv_v_seca').value) || 0,
-        v_amarga: parseInt(document.getElementById('inv_v_amarga').value) || 0,
-        v_acida: parseInt(document.getElementById('inv_v_acida').value) || 0,
+        picante: parseInt(document.getElementById('inv_picante')?.value) || 0,
+        dulce: parseInt(document.getElementById('inv_dulce')?.value) || 0,
+        seca: parseInt(document.getElementById('inv_seca')?.value) || 0,
+        amarga: parseInt(document.getElementById('inv_amarga')?.value) || 0,
+        acida: parseInt(document.getElementById('inv_acida')?.value) || 0,
+        v_picante: parseInt(document.getElementById('inv_v_picante')?.value) || 0,
+        v_dulce: parseInt(document.getElementById('inv_v_dulce')?.value) || 0,
+        v_seca: parseInt(document.getElementById('inv_v_seca')?.value) || 0,
+        v_amarga: parseInt(document.getElementById('inv_v_amarga')?.value) || 0,
+        v_acida: parseInt(document.getElementById('inv_v_acida')?.value) || 0,
     };
 
     const resultsDiv = document.getElementById('inventoryResults');
+    if (!resultsDiv) return;
     resultsDiv.innerHTML = '';
     resultsDiv.classList.remove('hidden');
 
     let hasResults = false;
+    let cardsHtml = '';
 
     Object.keys(RECIPES).forEach(key => {
-        const recipe = RECIPES[key];
-        let maxCrafts = Infinity;
+        const berry = RECIPES[key];
+        const berryName = (typeof getBerryName === 'function' ? getBerryName(key) : berry.name);
+        const sprite = berry.sprite || 'poke-ball';
+        const recipesList = (berry.recipes && berry.recipes.length > 0) ? berry.recipes : (berry.reqs ? [{ name: 'Estándar', reqs: berry.reqs }] : []);
 
-        recipe.reqs.forEach(req => {
-            const available = inv[req.id] || 0;
-            const crafts = Math.floor(available / req.qty);
-            if (crafts < maxCrafts) {
-                maxCrafts = crafts;
-            }
-        });
+        recipesList.forEach((rOption, rIdx) => {
+            let maxCrafts = Infinity;
+            rOption.reqs.forEach(req => {
+                const available = inv[req.id] || 0;
+                const crafts = Math.floor(available / req.qty);
+                if (crafts < maxCrafts) {
+                    maxCrafts = crafts;
+                }
+            });
 
-        if (maxCrafts > 0) {
-            hasResults = true;
-            
-            let seedsHtml = '<div class="mt-2 pt-2 border-t border-gray-800 text-left space-y-1">';
-            recipe.reqs.forEach(req => {
-                seedsHtml += `
-                    <div class="flex items-center gap-1 text-[13px] text-gray-400">
-                        <span class="w-2 h-2 rounded-full ${req.color}"></span>
-                        <span>${req.qty}x ${req.name.replace('Semilla ', '')}</span>
+            if (maxCrafts > 0 && maxCrafts !== Infinity) {
+                hasResults = true;
+                let seedsHtml = '<div class="mt-2 pt-2 border-t border-[#2B2B2B]/20 dark:border-[#35352E] text-left space-y-1">';
+                rOption.reqs.forEach(req => {
+                    const seedName = (typeof getSeedName === 'function' ? getSeedName(req.id) : (SEED_NAMES[req.id] || req.name));
+                    seedsHtml += `
+                        <div class="flex items-center justify-between text-[11px] font-mono text-[#5F5A4D] dark:text-[#A8A594]">
+                            <div class="flex items-center gap-1.5">
+                                <span class="w-2 h-2 rounded-full ${req.color || 'bg-os-blue'}"></span>
+                                <span>${seedName.replace('Semilla ', '').replace(' Seed', '')}</span>
+                            </div>
+                            <span class="font-bold text-[#1C1C17] dark:text-[#F4F1E8]">${req.qty * maxCrafts} u.</span>
+                        </div>
+                    `;
+                });
+                seedsHtml += '</div>';
+
+                const optLabel = recipesList.length > 1 ? `<span class="text-[10px] font-mono uppercase text-[#D97706] dark:text-[#F59E0B] block mt-0.5">Opción ${rIdx + 1}</span>` : '';
+
+                cardsHtml += `
+                    <div class="bg-[#FAF8F2] dark:bg-[#242420] border-2 border-[#2B2B2B] dark:border-[#35352E] p-3 rounded-xl text-center shadow-[2px_3px_0px_#2B2B2B] dark:shadow-[2px_3px_0px_#000] flex flex-col justify-between">
+                        <div>
+                            <div class="flex items-center justify-center gap-1.5 mb-1">
+                                <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/${sprite}.png" class="w-6 h-6 pokemon-sprite" onerror="this.src='https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/poke-ball.png'" alt="${berryName}">
+                                <p class="text-xs font-tech font-bold text-[#1C1C17] dark:text-[#F4F1E8] uppercase truncate">${berryName}</p>
+                            </div>
+                            ${optLabel}
+                            <p class="text-2xl font-black font-lcd text-[#10B981] my-1 tabular-nums">x${maxCrafts}</p>
+                            <p class="text-[11px] text-[#5F5A4D] dark:text-[#A8A594] font-mono uppercase">${currentLang === 'en' ? 'Plots can be planted' : 'Parcelas plantables'}</p>
+                        </div>
+                        ${seedsHtml}
                     </div>
                 `;
-            });
-            seedsHtml += '</div>';
-
-            resultsDiv.innerHTML += `
-                <div class="bg-gray-900 border border-purple-900/50 p-3 rounded-lg text-center shadow flex flex-col justify-between">
-                    <div>
-                        <p class="text-sm text-gray-300 font-bold mb-1">${recipe.name}</p>
-                        <p class="text-2xl font-black text-purple-400">x${maxCrafts}</p>
-                        <p class="text-[13px] text-gray-500 uppercase mt-1 mb-1">${currentLang === 'en' ? 'Plants' : 'Plantas'}</p>
-                    </div>
-                    ${seedsHtml}
-                </div>
-            `;
-        }
+            }
+        });
     });
 
     if (!hasResults) {
-        resultsDiv.innerHTML = `<div class="col-span-full text-center text-gray-400 py-4">${currentLang === 'en' ? 'You do not have enough seeds to plant any of the listed berries.' : 'No tienes suficientes semillas para plantar ningúna de las bayas listadas.'}</div>`;
+        resultsDiv.innerHTML = `<div class="col-span-full text-center text-xs font-mono text-[#5F5A4D] dark:text-[#A8A594] py-4 bg-[#EDE8DC]/50 dark:bg-[#1E1E1A] rounded-lg border border-[#2B2B2B]/20 dark:border-[#35352E]">${currentLang === 'en' ? 'You do not have enough seeds to plant any berry recipe.' : 'No tienes suficientes semillas para plantar ninguna de las recetas registradas.'}</div>`;
+    } else {
+        resultsDiv.innerHTML = cardsHtml;
     }
 }
 
