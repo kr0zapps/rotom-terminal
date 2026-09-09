@@ -151,11 +151,13 @@ export function getMarketState() {
 
         if (!marketState || typeof marketState !== 'object') {
             marketState = {
-                berry: 'cheri',
+                berry: 'chesto',
+                inputMode: 'exact',
+                exactBerries: 350,
                 plots: 72,
                 yield: 5.5,
-                replantMode: true,
-                recipeId: 'cheri_3plain',
+                replantMode: false,
+                recipeId: 'chesto_3plain',
                 berryPrices: {},
                 seedPrices: {},
                 toolCost: 350,
@@ -176,12 +178,14 @@ export function getMarketState() {
         marketState.seedPrices = { ...DEFAULT_SEED_PRICES, ...(marketState.seedPrices || {}) };
     }
     
-    if (!marketState.berry) marketState.berry = 'cheri';
+    if (!marketState.berry) marketState.berry = 'chesto';
+    if (!marketState.inputMode) marketState.inputMode = 'exact';
+    if (typeof marketState.exactBerries === 'undefined') marketState.exactBerries = 350;
     if (!marketState.plots) marketState.plots = 72;
     if (!marketState.yield) marketState.yield = 5.5;
     if (typeof marketState.toolCost === 'undefined') marketState.toolCost = 350;
     if (typeof marketState.gtlFee === 'undefined') marketState.gtlFee = 5;
-    if (typeof marketState.replantMode === 'undefined') marketState.replantMode = true;
+    if (typeof marketState.replantMode === 'undefined') marketState.replantMode = false;
 
     // Asegurar que recipeId sea válido para la baya seleccionada
     const validRecipes = RECIPE_OPTIONS[marketState.berry] || [];
@@ -336,92 +340,136 @@ export function renderMarketView() {
                 <div class="flex flex-wrap items-center justify-between pb-3 mb-4 border-b border-[#2B2B2B]/20 dark:border-[#35352E] gap-2">
                     <h2 class="text-xs font-tech font-bold uppercase tracking-wider text-[#1C1C17] dark:text-[#F4F1E8] flex items-center gap-2">
                         <span class="w-2.5 h-2.5 rounded-full bg-[#2563EB]"></span>
-                        <span>${isEn ? 'Harvest & Replanting Parameters' : 'Parámetros de Cosecha y Replantación'}</span>
+                        <span>${isEn ? 'Berry Decision Engine' : 'Simulador y Motor de Decisión de Bayas'}</span>
                     </h2>
-                    
-                    <!-- Switch Replantación -->
-                    <label class="flex items-center gap-2 cursor-pointer select-none bg-[#EDE8DC] dark:bg-[#1E1E1A] px-2.5 py-1 rounded-lg border border-[#2B2B2B]/30 dark:border-[#35352E]">
-                        <input type="checkbox" id="marketReplantSwitch" ${state.replantMode ? 'checked' : ''} class="w-4 h-4 accent-[#10B981] cursor-pointer">
-                        <span class="text-xs font-mono font-bold text-[#1C1C17] dark:text-[#F4F1E8]">
-                            ${isEn ? 'Reserve Seeds to Replant' : 'Descontar Semillas para Replantar'}
-                        </span>
-                    </label>
+
+                    <!-- Selector de Modo: Mochila (Exacto) vs Parcelas -->
+                    <div class="flex items-center gap-1 bg-[#EDE8DC] dark:bg-[#1E1E1A] p-1 rounded-lg border border-[#2B2B2B]/30 dark:border-[#35352E]">
+                        <button type="button" id="btnModeExact" onclick="window.setMarketInputMode('exact')" 
+                            class="px-3 py-1 rounded text-xs font-tech font-bold uppercase transition cursor-pointer ${state.inputMode === 'exact' ? 'bg-[#2563EB] text-white shadow-sm' : 'text-[#5F5A4D] dark:text-[#A8A594] hover:text-[#1C1C17] dark:hover:text-[#F4F1E8]'}">
+                            ${isEn ? 'Bag Inventory (Exact)' : 'Tengo Bayas en Mochila'}
+                        </button>
+                        <button type="button" id="btnModePlots" onclick="window.setMarketInputMode('plots')" 
+                            class="px-3 py-1 rounded text-xs font-tech font-bold uppercase transition cursor-pointer ${state.inputMode !== 'exact' ? 'bg-[#2563EB] text-white shadow-sm' : 'text-[#5F5A4D] dark:text-[#A8A594] hover:text-[#1C1C17] dark:hover:text-[#F4F1E8]'}">
+                            ${isEn ? 'Plots Farming' : 'Cultivo por Parcelas'}
+                        </button>
+                    </div>
                 </div>
 
-                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                    <!-- Selector de Baya -->
-                    <div>
-                        <label class="block text-[12px] font-mono uppercase font-bold text-[#5F5A4D] dark:text-[#A8A594] mb-1">
-                            ${isEn ? 'Berry Species' : 'Especie de Baya'}
-                        </label>
-                        <select id="marketBerrySelect" class="w-full p-2.5 text-xs font-mono rounded-lg bg-[#EDE8DC] dark:bg-[#20201C] border border-[#2B2B2B] dark:border-[#35352E] text-[#1C1C17] dark:text-[#F4F1E8] min-h-[42px] cursor-pointer">
-                            <optgroup label="${isEn ? 'Basic 16h Status Berries' : 'Básicas (16h - Estados)'}">
-                                <option value="cheri" ${state.berry === 'cheri' ? 'selected' : ''}>Zreza (Cheri) - Picante (Spicy)</option>
-                                <option value="pecha" ${state.berry === 'pecha' ? 'selected' : ''}>Meloc (Pecha) - Dulce (Sweet)</option>
-                                <option value="rawst" ${state.berry === 'rawst' ? 'selected' : ''}>Safre (Rawst) - Amarga (Bitter)</option>
-                                <option value="chesto" ${state.berry === 'chesto' ? 'selected' : ''}>Atania (Chesto) - Seca (Dry)</option>
-                                <option value="aspear" ${state.berry === 'aspear' ? 'selected' : ''}>Perasi (Aspear) - Ácida (Sour)</option>
-                            </optgroup>
-                            <optgroup label="${isEn ? 'Popular / High Demand' : 'Más Populares / Alta Demanda'}">
-                                <option value="leppa" ${state.berry === 'leppa' ? 'selected' : ''}>Zanama (Leppa) - PP / 20h</option>
-                                <option value="lum" ${state.berry === 'lum' ? 'selected' : ''}>Ziuela (Lum) - Estados / 44h</option>
-                                <option value="sitrus" ${state.berry === 'sitrus' ? 'selected' : ''}>Zidra (Sitrus) - PS / 44h</option>
-                            </optgroup>
-                            <optgroup label="${isEn ? 'EV-Reducing (44h)' : 'Reductoras de EVs (44h)'}">
-                                <option value="pomeg" ${state.berry === 'pomeg' ? 'selected' : ''}>Grana (Pomeg) - HP</option>
-                                <option value="kelpsy" ${state.berry === 'kelpsy' ? 'selected' : ''}>Algama (Kelpsy) - Ataque</option>
-                                <option value="qualot" ${state.berry === 'qualot' ? 'selected' : ''}>Ispero (Qualot) - Defensa</option>
-                                <option value="hondew" ${state.berry === 'hondew' ? 'selected' : ''}>Meluce (Hondew) - Atq. Esp.</option>
-                                <option value="grepa" ${state.berry === 'grepa' ? 'selected' : ''}>Uva (Grepa) - Def. Esp.</option>
-                                <option value="tamato" ${state.berry === 'tamato' ? 'selected' : ''}>Tamate (Tamato) - Velocidad</option>
-                            </optgroup>
-                        </select>
-                    </div>
-
-                    <!-- Parcelas con botones rápidos -->
-                    <div>
-                        <div class="flex justify-between items-center mb-1">
-                            <label class="text-[12px] font-mono uppercase font-bold text-[#5F5A4D] dark:text-[#A8A594]">
-                                ${isEn ? 'Planted Plots' : 'Parcelas Sembradas'}
+                <!-- CONTROLES COMUNES Y ESPECÍFICOS -->
+                <div class="space-y-4">
+                    <!-- Fila Principal de Entradas -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-4 items-end">
+                        <!-- Selector de Baya (Siempre visible) -->
+                        <div class="lg:col-span-4">
+                            <label class="block text-[12px] font-mono uppercase font-bold text-[#5F5A4D] dark:text-[#A8A594] mb-1">
+                                ${isEn ? 'Berry Species' : 'Especie de Baya'}
                             </label>
-                            <div class="flex gap-1">
-                                <button type="button" onclick="window.setMarketPlots(72)" class="text-[10px] font-tech font-bold uppercase px-1.5 py-0.5 rounded bg-[#EDE8DC] dark:bg-[#2E2E27] text-[#1C1C17] dark:text-[#F4F1E8] hover:border-[#FFC800] border border-[#2B2B2B] dark:border-[#35352E] cursor-pointer">
-                                    72
-                                </button>
-                                <button type="button" onclick="window.setMarketPlots(84)" class="text-[10px] font-tech font-bold uppercase px-1.5 py-0.5 rounded bg-[#EDE8DC] dark:bg-[#2E2E27] text-[#1C1C17] dark:text-[#F4F1E8] hover:border-[#FFC800] border border-[#2B2B2B] dark:border-[#35352E] cursor-pointer">
-                                    84 Hoenn
-                                </button>
-                                <button type="button" onclick="window.setMarketPlots(156)" class="text-[10px] font-tech font-bold uppercase px-1.5 py-0.5 rounded bg-[#EDE8DC] dark:bg-[#2E2E27] text-[#1C1C17] dark:text-[#F4F1E8] hover:border-[#FFC800] border border-[#2B2B2B] dark:border-[#35352E] cursor-pointer">
-                                    156 Teselia
-                                </button>
+                            <select id="marketBerrySelect" class="w-full p-2.5 text-xs font-mono rounded-lg bg-[#EDE8DC] dark:bg-[#20201C] border border-[#2B2B2B] dark:border-[#35352E] text-[#1C1C17] dark:text-[#F4F1E8] min-h-[42px] cursor-pointer">
+                                <optgroup label="${isEn ? 'Basic 16h Status Berries' : 'Básicas (16h - Estados)'}">
+                                    <option value="cheri" ${state.berry === 'cheri' ? 'selected' : ''}>Zreza (Cheri) - Picante (Spicy)</option>
+                                    <option value="pecha" ${state.berry === 'pecha' ? 'selected' : ''}>Meloc (Pecha) - Dulce (Sweet)</option>
+                                    <option value="rawst" ${state.berry === 'rawst' ? 'selected' : ''}>Safre (Rawst) - Amarga (Bitter)</option>
+                                    <option value="chesto" ${state.berry === 'chesto' ? 'selected' : ''}>Atania (Chesto) - Seca (Dry)</option>
+                                    <option value="aspear" ${state.berry === 'aspear' ? 'selected' : ''}>Perasi (Aspear) - Ácida (Sour)</option>
+                                </optgroup>
+                                <optgroup label="${isEn ? 'Popular / High Demand' : 'Más Populares / Alta Demanda'}">
+                                    <option value="leppa" ${state.berry === 'leppa' ? 'selected' : ''}>Zanama (Leppa) - PP / 20h</option>
+                                    <option value="lum" ${state.berry === 'lum' ? 'selected' : ''}>Ziuela (Lum) - Estados / 44h</option>
+                                    <option value="sitrus" ${state.berry === 'sitrus' ? 'selected' : ''}>Zidra (Sitrus) - PS / 44h</option>
+                                </optgroup>
+                                <optgroup label="${isEn ? 'EV-Reducing (44h)' : 'Reductoras de EVs (44h)'}">
+                                    <option value="pomeg" ${state.berry === 'pomeg' ? 'selected' : ''}>Grana (Pomeg) - HP</option>
+                                    <option value="kelpsy" ${state.berry === 'kelpsy' ? 'selected' : ''}>Algama (Kelpsy) - Ataque</option>
+                                    <option value="qualot" ${state.berry === 'qualot' ? 'selected' : ''}>Ispero (Qualot) - Defensa</option>
+                                    <option value="hondew" ${state.berry === 'hondew' ? 'selected' : ''}>Meluce (Hondew) - Atq. Esp.</option>
+                                    <option value="grepa" ${state.berry === 'grepa' ? 'selected' : ''}>Uva (Grepa) - Def. Esp.</option>
+                                    <option value="tamato" ${state.berry === 'tamato' ? 'selected' : ''}>Tamate (Tamato) - Velocidad</option>
+                                </optgroup>
+                            </select>
+                        </div>
+
+                        <!-- SECCIÓN MODO EXACTO: Cantidad Exacta de Bayas -->
+                        <div id="wrapperExactControls" class="${state.inputMode === 'exact' ? '' : 'hidden'} lg:col-span-5">
+                            <div class="flex justify-between items-center mb-1">
+                                <label class="text-[12px] font-mono uppercase font-bold text-[#5F5A4D] dark:text-[#A8A594]">
+                                    ${isEn ? 'Exact Berries in Bag' : 'Cantidad Exacta en Mochila'}
+                                </label>
+                                <span class="text-[11px] font-mono font-bold text-[#2563EB] dark:text-[#60A5FA]">
+                                    ${isEn ? 'Inventory Audit' : 'Auditoría en Mano'}
+                                </span>
+                            </div>
+                            <input type="number" id="marketExactBerriesInput" value="${state.exactBerries || 350}" min="1" max="999999" 
+                                class="w-full p-2.5 text-sm font-mono font-black text-center rounded-lg bg-[#EDE8DC] dark:bg-[#20201C] border-2 border-[#2563EB] text-[#1C1C17] dark:text-[#F4F1E8] min-h-[42px] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/40 shadow-inner">
+                        </div>
+
+                        <!-- SECCIÓN MODO PARCELAS: Parcelas y Rendimiento -->
+                        <div id="wrapperPlotsControls" class="${state.inputMode !== 'exact' ? '' : 'hidden'} lg:col-span-5 grid grid-cols-2 gap-2">
+                            <div>
+                                <div class="flex justify-between items-center mb-1">
+                                    <label class="text-[11px] font-mono uppercase font-bold text-[#5F5A4D] dark:text-[#A8A594]">
+                                        ${isEn ? 'Plots' : 'Parcelas'}
+                                    </label>
+                                    <div class="flex gap-1">
+                                        <button type="button" onclick="window.setMarketPlots(72)" class="text-[9px] font-tech font-bold uppercase px-1 py-0.2 rounded bg-[#EDE8DC] dark:bg-[#2E2E27] text-[#1C1C17] dark:text-[#F4F1E8] border border-[#2B2B2B] dark:border-[#35352E] cursor-pointer">72</button>
+                                        <button type="button" onclick="window.setMarketPlots(84)" class="text-[9px] font-tech font-bold uppercase px-1 py-0.2 rounded bg-[#EDE8DC] dark:bg-[#2E2E27] text-[#1C1C17] dark:text-[#F4F1E8] border border-[#2B2B2B] dark:border-[#35352E] cursor-pointer">84</button>
+                                        <button type="button" onclick="window.setMarketPlots(156)" class="text-[9px] font-tech font-bold uppercase px-1 py-0.2 rounded bg-[#EDE8DC] dark:bg-[#2E2E27] text-[#1C1C17] dark:text-[#F4F1E8] border border-[#2B2B2B] dark:border-[#35352E] cursor-pointer">156</button>
+                                    </div>
+                                </div>
+                                <input type="number" id="marketPlotsInput" value="${state.plots || 72}" min="1" max="2000" class="w-full p-2.5 text-xs font-mono font-bold text-center rounded-lg bg-[#EDE8DC] dark:bg-[#20201C] border border-[#2B2B2B] dark:border-[#35352E] text-[#1C1C17] dark:text-[#F4F1E8] min-h-[42px]">
+                            </div>
+                            <div>
+                                <label class="block text-[11px] font-mono uppercase font-bold text-[#5F5A4D] dark:text-[#A8A594] mb-1">
+                                    ${isEn ? 'Yield/Plot' : 'Rendimiento'}
+                                </label>
+                                <select id="marketYieldSelect" class="w-full p-2.5 text-xs font-mono rounded-lg bg-[#EDE8DC] dark:bg-[#20201C] border border-[#2B2B2B] dark:border-[#35352E] text-[#1C1C17] dark:text-[#F4F1E8] min-h-[42px] cursor-pointer">
+                                    <option value="4.0" ${state.yield == 4.0 ? 'selected' : ''}>4.0 u.</option>
+                                    <option value="5.0" ${state.yield == 5.0 ? 'selected' : ''}>5.0 u.</option>
+                                    <option value="5.5" ${state.yield == 5.5 ? 'selected' : ''}>5.5 u.</option>
+                                    <option value="6.0" ${state.yield == 6.0 ? 'selected' : ''}>6.0 u.</option>
+                                    <option value="7.0" ${state.yield == 7.0 ? 'selected' : ''}>7.0 u.</option>
+                                </select>
                             </div>
                         </div>
-                        <input type="number" id="marketPlotsInput" value="${state.plots || 72}" min="1" max="2000" class="w-full p-2.5 text-sm font-mono font-bold text-center rounded-lg bg-[#EDE8DC] dark:bg-[#20201C] border border-[#2B2B2B] dark:border-[#35352E] text-[#1C1C17] dark:text-[#F4F1E8] min-h-[42px]">
+
+                        <!-- Selector de Receta & Switch Replantación -->
+                        <div class="lg:col-span-3">
+                            <div class="flex items-center justify-between mb-1">
+                                <label class="text-[12px] font-mono uppercase font-bold text-[#5F5A4D] dark:text-[#A8A594]">
+                                    ${isEn ? 'Replanting Recipe' : 'Receta Replantar'}
+                                </label>
+                                <label class="flex items-center gap-1 cursor-pointer select-none">
+                                    <input type="checkbox" id="marketReplantSwitch" ${state.replantMode ? 'checked' : ''} class="w-3.5 h-3.5 accent-[#10B981] cursor-pointer">
+                                    <span class="text-[10px] font-mono font-bold text-[#10B981]">
+                                        ${isEn ? 'Replant' : 'Replantar'}
+                                    </span>
+                                </label>
+                            </div>
+                            <select id="marketRecipeSelect" class="w-full p-2.5 text-xs font-mono rounded-lg bg-[#EDE8DC] dark:bg-[#20201C] border border-[#2B2B2B] dark:border-[#35352E] text-[#1C1C17] dark:text-[#F4F1E8] min-h-[42px] cursor-pointer">
+                                <!-- Inyectado dinámicamente según la baya -->
+                            </select>
+                        </div>
                     </div>
 
-                    <!-- Rendimiento por Parcela -->
-                    <div>
-                        <label class="block text-[12px] font-mono uppercase font-bold text-[#5F5A4D] dark:text-[#A8A594] mb-1">
-                            ${isEn ? 'Expected Yield (Berries/Plot)' : 'Rendimiento (Bayas/Parcela)'}
-                        </label>
-                        <select id="marketYieldSelect" class="w-full p-2.5 text-xs font-mono rounded-lg bg-[#EDE8DC] dark:bg-[#20201C] border border-[#2B2B2B] dark:border-[#35352E] text-[#1C1C17] dark:text-[#F4F1E8] min-h-[42px] cursor-pointer">
-                            <option value="4.0" ${state.yield == 4.0 ? 'selected' : ''}>4.0 bayas (${isEn ? 'Minimum' : 'Mínimo sin regar'})</option>
-                            <option value="5.0" ${state.yield == 5.0 ? 'selected' : ''}>5.0 bayas (${isEn ? '1 watering' : 'Riego básico'})</option>
-                            <option value="5.5" ${state.yield == 5.5 ? 'selected' : ''}>5.5 bayas (${isEn ? 'Normal hydrated' : 'Promedio normal'})</option>
-                            <option value="6.0" ${state.yield == 6.0 ? 'selected' : ''}>6.0 bayas (${isEn ? 'Optimal' : 'Riego constante óptimo'})</option>
-                            <option value="7.0" ${state.yield == 7.0 ? 'selected' : ''}>7.0 bayas (${isEn ? 'Perfect maximum' : 'Máximo perfecto'})</option>
-                        </select>
+                    <!-- Botones Rápidos de Cantidad en Modo Exacto -->
+                    <div id="wrapperExactPresets" class="${state.inputMode === 'exact' ? '' : 'hidden'} flex items-center gap-1.5 flex-wrap pt-1">
+                        <span class="text-[11px] font-mono text-[#5F5A4D] dark:text-[#A8A594] font-bold mr-1">
+                            ${isEn ? 'Quick presets:' : 'Ajustes rápidos:'}
+                        </span>
+                        <button type="button" onclick="window.setExactBerries(50)" class="px-2 py-0.5 text-xs font-mono font-bold rounded bg-[#EDE8DC] dark:bg-[#2E2E27] hover:border-[#2563EB] border border-[#2B2B2B] dark:border-[#35352E] text-[#1C1C17] dark:text-[#F4F1E8] cursor-pointer">50</button>
+                        <button type="button" onclick="window.setExactBerries(100)" class="px-2 py-0.5 text-xs font-mono font-bold rounded bg-[#EDE8DC] dark:bg-[#2E2E27] hover:border-[#2563EB] border border-[#2B2B2B] dark:border-[#35352E] text-[#1C1C17] dark:text-[#F4F1E8] cursor-pointer">100</button>
+                        <button type="button" onclick="window.setExactBerries(250)" class="px-2 py-0.5 text-xs font-mono font-bold rounded bg-[#EDE8DC] dark:bg-[#2E2E27] hover:border-[#2563EB] border border-[#2B2B2B] dark:border-[#35352E] text-[#1C1C17] dark:text-[#F4F1E8] cursor-pointer">250</button>
+                        <button type="button" onclick="window.setExactBerries(350)" class="px-2 py-0.5 text-xs font-mono font-bold rounded bg-[#EDE8DC] dark:bg-[#2E2E27] hover:border-[#2563EB] border border-[#2B2B2B] dark:border-[#35352E] text-[#1C1C17] dark:text-[#F4F1E8] cursor-pointer">350</button>
+                        <button type="button" onclick="window.setExactBerries(500)" class="px-2 py-0.5 text-xs font-mono font-bold rounded bg-[#EDE8DC] dark:bg-[#2E2E27] hover:border-[#2563EB] border border-[#2B2B2B] dark:border-[#35352E] text-[#1C1C17] dark:text-[#F4F1E8] cursor-pointer">500</button>
+                        <button type="button" onclick="window.setExactBerries(1000)" class="px-2 py-0.5 text-xs font-mono font-bold rounded bg-[#EDE8DC] dark:bg-[#2E2E27] hover:border-[#2563EB] border border-[#2B2B2B] dark:border-[#35352E] text-[#1C1C17] dark:text-[#F4F1E8] cursor-pointer">1,000</button>
+                        <button type="button" onclick="window.addExactBerries(100)" class="px-2 py-0.5 text-xs font-mono font-bold rounded bg-[#2563EB]/15 hover:bg-[#2563EB]/30 border border-[#2563EB]/40 text-[#2563EB] dark:text-[#60A5FA] cursor-pointer">+100</button>
+                        <button type="button" onclick="window.addExactBerries(500)" class="px-2 py-0.5 text-xs font-mono font-bold rounded bg-[#2563EB]/15 hover:bg-[#2563EB]/30 border border-[#2563EB]/40 text-[#2563EB] dark:text-[#60A5FA] cursor-pointer">+500</button>
                     </div>
+                </div>
 
-                    <!-- Selector de Receta de Replantación -->
-                    <div>
-                        <label class="block text-[12px] font-mono uppercase font-bold text-[#5F5A4D] dark:text-[#A8A594] mb-1">
-                            ${isEn ? 'Replanting Recipe to Use' : 'Receta de Replantación a Usar'}
-                        </label>
-                        <select id="marketRecipeSelect" class="w-full p-2.5 text-xs font-mono rounded-lg bg-[#EDE8DC] dark:bg-[#20201C] border border-[#2B2B2B] dark:border-[#35352E] text-[#1C1C17] dark:text-[#F4F1E8] min-h-[42px] cursor-pointer">
-                            <!-- Inyectado dinámicamente según la baya -->
-                        </select>
-                    </div>
+                <!-- CARD DE VEREDICTO INMEDIATO ("¿TRITURAR O VENDER?") -->
+                <div id="quickVerdictCard" class="mt-4 p-4 rounded-xl border-2 transition-all">
+                    <!-- Inyectado dinámicamente -->
                 </div>
 
                 <!-- Costos de Herramienta & Comisión GTL -->
@@ -634,6 +682,15 @@ export function initMarket() {
         });
     }
 
+    const exactInput = document.getElementById('marketExactBerriesInput');
+    if (exactInput) {
+        exactInput.addEventListener('input', (e) => {
+            state.exactBerries = parseInt(e.target.value) || 0;
+            saveMarketState();
+            updateSimulation();
+        });
+    }
+
     const plotsInput = document.getElementById('marketPlotsInput');
     if (plotsInput) {
         plotsInput.addEventListener('input', (e) => {
@@ -697,6 +754,47 @@ export function initMarket() {
             resetMarketPrices();
         });
     }
+
+    window.setMarketInputMode = (mode) => {
+        state.inputMode = mode;
+        saveMarketState();
+
+        const btnExact = document.getElementById('btnModeExact');
+        const btnPlots = document.getElementById('btnModePlots');
+        const wrapExact = document.getElementById('wrapperExactControls');
+        const wrapExactPresets = document.getElementById('wrapperExactPresets');
+        const wrapPlots = document.getElementById('wrapperPlotsControls');
+
+        if (btnExact && btnPlots) {
+            if (mode === 'exact') {
+                btnExact.className = 'px-3 py-1 rounded text-xs font-tech font-bold uppercase transition cursor-pointer bg-[#2563EB] text-white shadow-sm';
+                btnPlots.className = 'px-3 py-1 rounded text-xs font-tech font-bold uppercase transition cursor-pointer text-[#5F5A4D] dark:text-[#A8A594] hover:text-[#1C1C17] dark:hover:text-[#F4F1E8]';
+            } else {
+                btnPlots.className = 'px-3 py-1 rounded text-xs font-tech font-bold uppercase transition cursor-pointer bg-[#2563EB] text-white shadow-sm';
+                btnExact.className = 'px-3 py-1 rounded text-xs font-tech font-bold uppercase transition cursor-pointer text-[#5F5A4D] dark:text-[#A8A594] hover:text-[#1C1C17] dark:hover:text-[#F4F1E8]';
+            }
+        }
+
+        if (wrapExact) wrapExact.classList.toggle('hidden', mode !== 'exact');
+        if (wrapExactPresets) wrapExactPresets.classList.toggle('hidden', mode !== 'exact');
+        if (wrapPlots) wrapPlots.classList.toggle('hidden', mode === 'exact');
+
+        updateSimulation();
+    };
+
+    window.setExactBerries = (num) => {
+        const input = document.getElementById('marketExactBerriesInput');
+        if (input) input.value = num;
+        state.exactBerries = num;
+        saveMarketState();
+        updateSimulation();
+    };
+
+    window.addExactBerries = (delta) => {
+        const current = parseInt(state.exactBerries) || 0;
+        const nextVal = Math.max(1, current + delta);
+        window.setExactBerries(nextVal);
+    };
 
     window.setMarketPlots = (num) => {
         const pInput = document.getElementById('marketPlotsInput');
@@ -1123,13 +1221,14 @@ export function resetMarketPrices() {
 // =========================================================================
 export function computeGlobalRanking() {
     const state = getMarketState();
+    const isExact = state.inputMode === 'exact';
     const plots = Math.max(1, state.plots || 72);
     const yieldVal = state.yield || 5.5;
     const replantMode = state.replantMode !== false;
     const toolCost = typeof state.toolCost !== 'undefined' ? state.toolCost : 350;
     const feePct = typeof state.gtlFee !== 'undefined' ? state.gtlFee : 5;
     const feeFactor = (100 - feePct) / 100;
-    const totalBerries = Math.round(plots * yieldVal);
+    const totalBerries = isExact ? Math.max(1, state.exactBerries || 350) : Math.round(plots * yieldVal);
 
     const ranking = [];
 
@@ -1142,15 +1241,17 @@ export function computeGlobalRanking() {
         const rawGross = totalBerries * berryPrice;
         const rawNetGtl = rawGross * feeFactor;
         let minReplantCost = Infinity;
-        for (const r of recipes) {
-            let cost = 0;
-            for (const req of r.reqs) {
-                const sPrice = state.seedPrices[req.id] ?? DEFAULT_SEED_PRICES[req.id] ?? 750;
-                cost += req.qty * plots * sPrice;
+        if (replantMode) {
+            for (const r of recipes) {
+                let cost = 0;
+                for (const req of r.reqs) {
+                    const sPrice = state.seedPrices[req.id] ?? DEFAULT_SEED_PRICES[req.id] ?? 750;
+                    cost += req.qty * plots * sPrice;
+                }
+                if (cost < minReplantCost) minReplantCost = cost;
             }
-            if (cost < minReplantCost) minReplantCost = cost;
         }
-        if (minReplantCost === Infinity) minReplantCost = 0;
+        if (minReplantCost === Infinity || !replantMode) minReplantCost = 0;
         const rawProfit = rawNetGtl - (replantMode ? minReplantCost : 0);
 
         // 2. Beneficio Trituración (Evaluar todas las recetas, elegir la más rentable)
@@ -1344,7 +1445,8 @@ export function updateSimulation() {
         state.recipeId = recipeSelect.value;
     }
 
-    const berryKey = state.berry || 'cheri';
+    const isExact = state.inputMode === 'exact';
+    const berryKey = state.berry || 'chesto';
     const plots = Math.max(1, state.plots || 72);
     const yieldVal = state.yield || 5.5;
     const replantMode = state.replantMode !== false;
@@ -1352,7 +1454,7 @@ export function updateSimulation() {
     const feePct = typeof state.gtlFee !== 'undefined' ? state.gtlFee : 5;
     const feeFactor = (100 - feePct) / 100;
 
-    const totalBerries = Math.round(plots * yieldVal);
+    const totalBerries = isExact ? Math.max(1, state.exactBerries || 350) : Math.round(plots * yieldVal);
     const profile = EXTRACTION_PROFILES[berryKey] || {};
     const recipeOpts = RECIPE_OPTIONS[berryKey] || [];
     const chosenRecipe = recipeOpts.find(r => r.id === state.recipeId) || recipeOpts[0];
@@ -1382,7 +1484,7 @@ export function updateSimulation() {
     const summaryBadge = document.getElementById('harvestSummaryBadge');
     if (summaryBadge) {
         summaryBadge.innerHTML = `
-            <span>${totalBerries.toLocaleString()} ${isEn ? 'berries harvested' : 'bayas cosechadas'}</span>
+            <span>${totalBerries.toLocaleString()} ${isEn ? (isExact ? 'berries in bag' : 'berries harvested') : (isExact ? 'bayas en mochila' : 'bayas cosechadas')}</span>
             <span class="text-[#5F5A4D] dark:text-[#A8A594] mx-1.5">&bull;</span>
             <span class="text-[#B45309] dark:text-[#F59E0B]">${totalBerries.toLocaleString()} ${isEn ? 'tools' : 'herramientas'} ($${(totalBerries * toolCost).toLocaleString()})</span>
         `;
@@ -1503,17 +1605,100 @@ export function updateSimulation() {
     if (crushFinalProfitEl) crushFinalProfitEl.innerText = formatMoney(Math.round(crushFinalProfit));
 
     // =========================================================================
-    // VEREDICTO DINÁMICO TÁCTICO
+    // VEREDICTOS TÁCTICOS (TARJETA RÁPIDA EN PANEL 1 + BANNER GIGANTE EN PANEL 4)
     // =========================================================================
+    const diff = crushFinalProfit - rawFinalProfit;
+    const absDiff = Math.abs(diff);
+    const diffPct = rawFinalProfit > 0 ? ((absDiff / rawFinalProfit) * 100).toFixed(1) : 0;
+    const diffPerBerry = (absDiff / totalBerries).toFixed(0);
+    const isCrushBetter = diff > 0;
+
+    // 1. Tarjeta Rápida de Veredicto Inmediato en Panel 1
+    const quickCard = document.getElementById('quickVerdictCard');
+    if (quickCard) {
+        if (isCrushBetter) {
+            quickCard.className = 'mt-4 p-4 rounded-xl border-2 border-[#10B981] bg-[#10B981]/15 dark:bg-[#064E3B]/40 shadow-md transition-all';
+            quickCard.innerHTML = `
+                <div class="flex flex-col md:flex-row md:items-center justify-between gap-3">
+                    <div class="flex items-start gap-3">
+                        <div class="p-2 rounded-lg bg-[#10B981] text-white flex-shrink-0 mt-0.5 shadow-sm">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/></svg>
+                        </div>
+                        <div>
+                            <div class="flex items-center gap-2 flex-wrap">
+                                <span class="text-[10px] font-mono font-black uppercase px-2 py-0.5 rounded bg-[#10B981] text-white">
+                                    ${isEn ? 'TACTICAL VERDICT' : 'VEREDICTO INMEDIATO'}
+                                </span>
+                                <span class="text-xs sm:text-sm font-tech font-black uppercase text-[#059669] dark:text-[#34D399]">
+                                    ${isEn ? 'MORE PROFITABLE TO CRUSH SEEDS' : 'CONVIENE TRITURAR Y VENDER SEMILLAS'}
+                                </span>
+                            </div>
+                            <p class="text-xs font-sans text-[#1C1C17] dark:text-[#E5E7EB] mt-1">
+                                ${isEn
+                                    ? `For <strong>${totalBerries.toLocaleString()} berries</strong>: crushing nets <strong>+${formatMoney(Math.round(absDiff))} more</strong> (+${diffPct}%, +$${diffPerBerry}/berry) than selling raw.`
+                                    : `Para tus <strong>${totalBerries.toLocaleString()} bayas</strong>: triturarlas te da <strong>+${formatMoney(Math.round(absDiff))} más de ganancia limpia</strong> (+${diffPct}%, +$${diffPerBerry} por baya) que venderlas crudas.`
+                                }
+                            </p>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-3 md:flex-col md:items-end justify-between border-t md:border-t-0 pt-2 md:pt-0 border-[#10B981]/30">
+                        <div class="text-left md:text-right">
+                            <span class="text-[10px] font-mono text-[#5F5A4D] dark:text-[#A8A594] uppercase block">${isEn ? 'Net Crushing Edge' : 'Ventaja Neta Triturar'}</span>
+                            <span class="text-lg sm:text-xl font-mono font-black text-[#10B981] tabular-nums">+${formatMoney(Math.round(absDiff))}</span>
+                        </div>
+                        <div class="text-[11px] font-mono tabular-nums text-[#5F5A4D] dark:text-[#A8A594]">
+                            <span>${isEn ? 'Crush Net' : 'Triturar'}: <strong class="text-[#10B981]">${formatMoney(Math.round(crushFinalProfit))}</strong></span>
+                            <span class="mx-1">|</span>
+                            <span>${isEn ? 'Raw Net' : 'Cruda'}: <strong class="text-[#3B82F6]">${formatMoney(Math.round(rawFinalProfit))}</strong></span>
+                        </div>
+                    </div>
+                </div>
+            `;
+        } else {
+            quickCard.className = 'mt-4 p-4 rounded-xl border-2 border-[#3B82F6] bg-[#3B82F6]/15 dark:bg-[#1E3A8A]/40 shadow-md transition-all';
+            quickCard.innerHTML = `
+                <div class="flex flex-col md:flex-row md:items-center justify-between gap-3">
+                    <div class="flex items-start gap-3">
+                        <div class="p-2 rounded-lg bg-[#3B82F6] text-white flex-shrink-0 mt-0.5 shadow-sm">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                        </div>
+                        <div>
+                            <div class="flex items-center gap-2 flex-wrap">
+                                <span class="text-[10px] font-mono font-black uppercase px-2 py-0.5 rounded bg-[#3B82F6] text-white">
+                                    ${isEn ? 'TACTICAL VERDICT' : 'VEREDICTO INMEDIATO'}
+                                </span>
+                                <span class="text-xs sm:text-sm font-tech font-black uppercase text-[#2563EB] dark:text-[#60A5FA]">
+                                    ${isEn ? 'MORE PROFITABLE TO SELL RAW BERRIES' : 'CONVIENE VENDER LAS BAYAS CRUDAS'}
+                                </span>
+                            </div>
+                            <p class="text-xs font-sans text-[#1C1C17] dark:text-[#E5E7EB] mt-1">
+                                ${isEn
+                                    ? `For <strong>${totalBerries.toLocaleString()} berries</strong>: selling raw nets <strong>+${formatMoney(Math.round(absDiff))} more</strong> (+${diffPct}%) than crushing. Seed prices do not offset the $350 tool expense.`
+                                    : `Para tus <strong>${totalBerries.toLocaleString()} bayas</strong>: venderlas crudas te deja <strong>+${formatMoney(Math.round(absDiff))} más</strong> (+${diffPct}%) que triturar. Los precios de las semillas no compensan los $350 de herramienta por baya.`
+                                }
+                            </p>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-3 md:flex-col md:items-end justify-between border-t md:border-t-0 pt-2 md:pt-0 border-[#3B82F6]/30">
+                        <div class="text-left md:text-right">
+                            <span class="text-[10px] font-mono text-[#5F5A4D] dark:text-[#A8A594] uppercase block">${isEn ? 'Net Raw Edge' : 'Ventaja Venta Cruda'}</span>
+                            <span class="text-lg sm:text-xl font-mono font-black text-[#3B82F6] tabular-nums">+${formatMoney(Math.round(absDiff))}</span>
+                        </div>
+                        <div class="text-[11px] font-mono tabular-nums text-[#5F5A4D] dark:text-[#A8A594]">
+                            <span>${isEn ? 'Raw Net' : 'Cruda'}: <strong class="text-[#3B82F6]">${formatMoney(Math.round(rawFinalProfit))}</strong></span>
+                            <span class="mx-1">|</span>
+                            <span>${isEn ? 'Crush Net' : 'Triturar'}: <strong class="text-[#10B981]">${formatMoney(Math.round(crushFinalProfit))}</strong></span>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+    }
+
+    // 2. Banner Grande de Veredicto en Panel 4
     const banner = document.getElementById('marketVerdictBanner');
     if (banner) {
-        const diff = crushFinalProfit - rawFinalProfit;
-        const absDiff = Math.abs(diff);
-        const diffPct = rawFinalProfit > 0 ? ((absDiff / rawFinalProfit) * 100).toFixed(1) : 0;
-        const diffPerBerry = (absDiff / totalBerries).toFixed(0);
-
-        if (diff > 0) {
-            // Conviene Triturar
+        if (isCrushBetter) {
             banner.className = 'p-5 sm:p-6 rounded-2xl border-2 border-[#10B981] bg-[#10B981]/15 dark:bg-[#064E3B]/40 shadow-lg text-[#1C1C17] dark:text-[#F4F1E8] transition-all';
             banner.innerHTML = `
                 <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -1523,15 +1708,15 @@ export function updateSimulation() {
                         </div>
                         <div>
                             <span class="text-xs font-mono font-bold uppercase tracking-wider text-[#059669] dark:text-[#34D399] block mb-0.5">
-                                ${isEn ? 'TACTICAL VERDICT: MORE PROFITABLE TO CRUSH' : 'VEREDICTO TÁCTICO: MÁS A CUENTA TRITURAR'}
+                                ${isEn ? 'TACTICAL AUDIT: CRUSHING IS MORE PROFITABLE' : 'AUDITORÍA TÁCTICA: MÁS A CUENTA TRITURAR'}
                             </span>
                             <h4 class="text-lg sm:text-xl font-tech font-extrabold uppercase text-[#1C1C17] dark:text-[#F4F1E8]">
                                 ${isEn ? 'CRUSH BERRIES AND SELL SURPLUS SEEDS' : 'TRITURA LAS BAYAS Y VENDE LAS SEMILLAS'}
                             </h4>
                             <p class="text-xs font-sans text-[#5F5A4D] dark:text-[#D1D5DB] mt-1 max-w-2xl leading-relaxed">
                                 ${isEn
-                                    ? `Crushing nets you <strong>+${formatMoney(Math.round(absDiff))} more</strong> (+${diffPct}%) than selling raw berries. You secure your replanting seeds for all ${plots} plots and sell surplus on the GTL.`
-                                    : `Triturar te deja <strong>+${formatMoney(Math.round(absDiff))} más de ganancia limpia</strong> (+${diffPct}%) respecto a vender la baya cruda (+${diffPerBerry}$ por baya). Además tus semillas para replantar las ${plots} parcelas quedan 100% aseguradas en tu inventario.`
+                                    ? `Crushing nets you <strong>+${formatMoney(Math.round(absDiff))} more</strong> (+${diffPct}%) than selling raw berries. ${replantMode ? `You secure your replanting seeds for all ${plots} plots and sell surplus on the GTL.` : 'All seeds produced are sold directly as surplus on the GTL.'}`
+                                    : `Triturar te deja <strong>+${formatMoney(Math.round(absDiff))} más de ganancia limpia</strong> (+${diffPct}%) respecto a vender la baya cruda (+${diffPerBerry}$ por baya). ${replantMode ? `Además tus semillas para replantar las ${plots} parcelas quedan 100% aseguradas en tu inventario.` : 'Todas las semillas obtenidas se liquidan directamente en el GTL.'}`
                                 }
                             </p>
                         </div>
@@ -1544,7 +1729,6 @@ export function updateSimulation() {
                 </div>
             `;
         } else {
-            // Conviene Vender Baya Cruda
             banner.className = 'p-5 sm:p-6 rounded-2xl border-2 border-[#3B82F6] bg-[#3B82F6]/15 dark:bg-[#1E3A8A]/40 shadow-lg text-[#1C1C17] dark:text-[#F4F1E8] transition-all';
             banner.innerHTML = `
                 <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -1554,7 +1738,7 @@ export function updateSimulation() {
                         </div>
                         <div>
                             <span class="text-xs font-mono font-bold uppercase tracking-wider text-[#2563EB] dark:text-[#60A5FA] block mb-0.5">
-                                ${isEn ? 'TACTICAL VERDICT: MORE PROFITABLE TO SELL RAW' : 'VEREDICTO TÁCTICO: MÁS A CUENTA VENDER CRUDA'}
+                                ${isEn ? 'TACTICAL AUDIT: RAW SALE IS MORE PROFITABLE' : 'AUDITORÍA TÁCTICA: MÁS A CUENTA VENDER CRUDA'}
                             </span>
                             <h4 class="text-lg sm:text-xl font-tech font-extrabold uppercase text-[#1C1C17] dark:text-[#F4F1E8]">
                                 ${isEn ? 'SELL RAW BERRIES DIRECTLY ON GTL' : 'VENDE LAS BAYAS CRUDAS DIRECTAMENTE EN EL GTL'}
